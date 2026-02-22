@@ -123,6 +123,21 @@ class DummyService:
     def force_unlock_module_with_dependencies(self, profile_id: int, module_id: str) -> list[str]:
         return ["base-linux", module_id]
 
+    def export_profile(self, profile_id: int, export_path: str) -> object:
+        return type(
+            "TransferSummary",
+            (),
+            {"profile_id": profile_id, "profile_name": "alice", "module_rows": 1, "card_rows": 2, "attempt_rows": 3},
+        )()
+
+    def import_profile(self, import_path: str, profile_name: str | None) -> object:
+        name = profile_name if profile_name is not None else "imported-alice"
+        return type(
+            "TransferSummary",
+            (),
+            {"profile_id": 2, "profile_name": name, "module_rows": 1, "card_rows": 2, "attempt_rows": 3},
+        )()
+
 
 def test_run_enters_play_shell(monkeypatch: Any) -> None:
     monkeypatch.setattr(main, "play_shell", lambda: 0)
@@ -308,11 +323,12 @@ def test_queue_flow() -> None:
 def test_admin_flow_routes_subcommands() -> None:
     service = DummyService()
     outputs: list[str] = []
-    inputs = iter(["1", "1", "b", "2", "3", "1", "b", "b"])
+    inputs = iter(["1", "1", "b", "2", "3", "1", "4", "backup.json", "b"])
     main._admin_flow(service, 1, lambda _: next(inputs), outputs.append)
     assert any("Admin" in line for line in outputs)
     assert any("Force Unlock" in line for line in outputs)
     assert any("Module Details" in line for line in outputs)
+    assert any("Exported profile" in line for line in outputs)
 
 
 def test_force_unlock_flow() -> None:
@@ -454,6 +470,15 @@ def test_select_profile_delete_invalid_choice() -> None:
     assert any("Invalid choice." in line for line in outputs)
 
 
+def test_select_profile_import_option() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    inputs = iter(["i", "backup.json", "imported", "q"])
+    selected = main._select_profile(service, lambda _: next(inputs), outputs.append, allow_cancel=False)
+    assert selected is None
+    assert any("Imported profile 'imported'" in line for line in outputs)
+
+
 def test_module_details_flow_lessons() -> None:
     service = DummyService()
     outputs: list[str] = []
@@ -483,6 +508,32 @@ def test_module_details_flow_invalid_choices() -> None:
     outputs = []
     main._module_details_flow(service, 1, lambda _: "9", outputs.append)
     assert any("Invalid choice." in line for line in outputs)
+
+
+def test_export_profile_flow() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    main._export_profile_flow(service, 1, lambda _: "backup.json", outputs.append)
+    assert any("Exported profile 'alice'" in line for line in outputs)
+    assert any("module rows: 1" in line for line in outputs)
+
+
+def test_import_profile_flow() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    inputs = iter(["backup.json", "new-name"])
+    main._import_profile_flow(service, lambda _: next(inputs), outputs.append)
+    assert any("Imported profile 'new-name'" in line for line in outputs)
+
+
+def test_import_export_flow_empty_path_validation() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    main._export_profile_flow(service, 1, lambda _: "", outputs.append)
+    assert any("File path is required." in line for line in outputs)
+    outputs = []
+    main._import_profile_flow(service, lambda _: "", outputs.append)
+    assert any("File path is required." in line for line in outputs)
 
 
 def test_run_guided_module_progress_saved_branch() -> None:

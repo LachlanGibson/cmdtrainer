@@ -244,3 +244,43 @@ def test_migrates_legacy_module_progress_without_completed_content_version(tmp_p
     assert started is True
     assert completed is True
     assert completed_version == 2
+
+
+def test_replace_profile_data_supports_interval_days_branch() -> None:
+    store = ProgressStore(":memory:")
+    profile = store.create_profile("replace-legacy")
+    store._ensure_column("card_progress", "interval_days", "INTEGER NOT NULL DEFAULT 0")  # noqa: SLF001
+    store._card_progress_has_interval_days = True  # noqa: SLF001
+    store.replace_profile_data(
+        profile.id,
+        module_rows=[
+            {
+                "module_id": "base-linux",
+                "started_at": datetime.now(UTC).isoformat(),
+                "completed_at": None,
+                "completed_content_version": None,
+            }
+        ],
+        card_rows=[
+            {
+                "card_id": "base-linux-pwd",
+                "streak": 1,
+                "spacing_score": 1.0,
+                "interval_minutes": "15",
+                "due_at": datetime.now(UTC).isoformat(),
+                "last_seen_at": datetime.now(UTC).isoformat(),
+                "last_result": 1,
+                "seen_count": 1,
+            }
+        ],
+        attempt_rows=[
+            {
+                "card_id": "base-linux-pwd",
+                "user_input": "pwd",
+                "is_correct": 1,
+                "created_at": datetime.now(UTC).isoformat(),
+            }
+        ],
+    )
+    assert store.module_state(profile.id, "base-linux")[0] is True
+    assert store.get_card_schedule(profile.id, "base-linux-pwd") is not None

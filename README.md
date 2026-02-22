@@ -18,6 +18,7 @@ This app does **not execute learner commands**. It validates typed command strin
   - per-module progression summary with lesson breakdown.
 - Practice queue view in table format (local due time, streak, score, interval, command).
 - Admin force unlock for a module and all prerequisite modules.
+- Profile export/import to JSON for backup and transfer.
 - Expanded modules for networking, HTTP clients, tmux, process tooling, and archives/compression.
 - Content/version-aware progression:
   - module completion records content version,
@@ -57,8 +58,17 @@ cmdtrainer
 - `1) Module details`
 - `2) View schedule queue`
 - `3) Force unlock module (+ dependencies)`
+- `4) Export current profile`
 
 Force unlock marks selected module and all prerequisites as completed for the current profile.
+
+Profile menu includes:
+- `i) Import profile from file`
+
+Export/import notes:
+- Export includes profile progress, card scheduling state, and attempts history.
+- Import uses a versioned JSON format and rejects unsupported newer export versions with a clear error.
+- Missing optional fields in older export files are defaulted when importing.
 
 ## Validation
 

@@ -309,6 +309,186 @@ class ProgressStore:
             seen_count=int(row["seen_count"]),
         )
 
+    def list_module_progress_rows(self, profile_id: int) -> list[dict[str, object]]:
+        """Return raw module_progress rows for export."""
+        rows = self._conn.execute(
+            """
+            SELECT module_id, started_at, completed_at, completed_content_version
+            FROM module_progress
+            WHERE profile_id = ?
+            ORDER BY module_id ASC
+            """,
+            (profile_id,),
+        ).fetchall()
+        return [
+            {
+                "module_id": str(row["module_id"]),
+                "started_at": str(row["started_at"]),
+                "completed_at": str(row["completed_at"]) if row["completed_at"] is not None else None,
+                "completed_content_version": (
+                    int(row["completed_content_version"]) if row["completed_content_version"] is not None else None
+                ),
+            }
+            for row in rows
+        ]
+
+    def list_card_progress_rows(self, profile_id: int) -> list[dict[str, object]]:
+        """Return raw card_progress rows for export."""
+        rows = self._conn.execute(
+            """
+            SELECT card_id, streak, spacing_score, interval_minutes, due_at, last_seen_at, last_result, seen_count
+            FROM card_progress
+            WHERE profile_id = ?
+            ORDER BY card_id ASC
+            """,
+            (profile_id,),
+        ).fetchall()
+        return [
+            {
+                "card_id": str(row["card_id"]),
+                "streak": int(row["streak"]),
+                "spacing_score": float(row["spacing_score"]),
+                "interval_minutes": int(row["interval_minutes"]),
+                "due_at": str(row["due_at"]),
+                "last_seen_at": str(row["last_seen_at"]),
+                "last_result": int(row["last_result"]),
+                "seen_count": int(row["seen_count"]),
+            }
+            for row in rows
+        ]
+
+    def list_attempt_rows(self, profile_id: int) -> list[dict[str, object]]:
+        """Return raw attempts rows for export."""
+        rows = self._conn.execute(
+            """
+            SELECT card_id, user_input, is_correct, created_at
+            FROM attempts
+            WHERE profile_id = ?
+            ORDER BY id ASC
+            """,
+            (profile_id,),
+        ).fetchall()
+        return [
+            {
+                "card_id": str(row["card_id"]),
+                "user_input": str(row["user_input"]),
+                "is_correct": int(row["is_correct"]),
+                "created_at": str(row["created_at"]),
+            }
+            for row in rows
+        ]
+
+    def replace_profile_data(
+        self,
+        profile_id: int,
+        module_rows: list[dict[str, object]],
+        card_rows: list[dict[str, object]],
+        attempt_rows: list[dict[str, object]],
+    ) -> None:
+        """Replace all progress rows for a profile using normalized row payloads."""
+        with self._conn:
+            self._conn.execute("DELETE FROM attempts WHERE profile_id = ?", (profile_id,))
+            self._conn.execute("DELETE FROM card_progress WHERE profile_id = ?", (profile_id,))
+            self._conn.execute("DELETE FROM module_progress WHERE profile_id = ?", (profile_id,))
+
+            for row in module_rows:
+                self._conn.execute(
+                    """
+                    INSERT INTO module_progress (
+                        profile_id,
+                        module_id,
+                        started_at,
+                        completed_at,
+                        completed_content_version
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        profile_id,
+                        row["module_id"],
+                        row["started_at"],
+                        row["completed_at"],
+                        row["completed_content_version"],
+                    ),
+                )
+
+            for row in card_rows:
+                if self._card_progress_has_interval_days:
+                    interval_value = row["interval_minutes"]
+                    interval_minutes = int(interval_value) if isinstance(interval_value, int | str | float) else 0
+                    self._conn.execute(
+                        """
+                        INSERT INTO card_progress (
+                            profile_id,
+                            card_id,
+                            streak,
+                            interval_days,
+                            spacing_score,
+                            interval_minutes,
+                            due_at,
+                            last_seen_at,
+                            last_result,
+                            seen_count
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            profile_id,
+                            row["card_id"],
+                            row["streak"],
+                            max(0, interval_minutes // (60 * 24)),
+                            row["spacing_score"],
+                            interval_minutes,
+                            row["due_at"],
+                            row["last_seen_at"],
+                            row["last_result"],
+                            row["seen_count"],
+                        ),
+                    )
+                else:
+                    self._conn.execute(
+                        """
+                        INSERT INTO card_progress (
+                            profile_id,
+                            card_id,
+                            streak,
+                            spacing_score,
+                            interval_minutes,
+                            due_at,
+                            last_seen_at,
+                            last_result,
+                            seen_count
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            profile_id,
+                            row["card_id"],
+                            row["streak"],
+                            row["spacing_score"],
+                            row["interval_minutes"],
+                            row["due_at"],
+                            row["last_seen_at"],
+                            row["last_result"],
+                            row["seen_count"],
+                        ),
+                    )
+
+            for row in attempt_rows:
+                self._conn.execute(
+                    """
+                    INSERT INTO attempts (profile_id, card_id, user_input, is_correct, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        profile_id,
+                        row["card_id"],
+                        row["user_input"],
+                        row["is_correct"],
+                        row["created_at"],
+                    ),
+                )
+
     def list_card_schedules(self, profile_id: int) -> list[CardSchedule]:
         """Return all card schedules for a profile ordered by due time."""
         rows = self._conn.execute(

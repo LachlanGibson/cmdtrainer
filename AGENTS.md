@@ -37,8 +37,10 @@ The product form is a CLI tool.
   - update `SCHEMA_VERSION` and add a forward-only migration in `src/cmdtrainer/progress.py`,
   - add/maintain migration tests for fresh DB creation and upgrades from older schema versions,
   - keep startup auto-migration behavior working for existing user databases.
+- For significant DB or export-format updates, add a new versioned profile export fixture and a pytest compatibility case that verifies old exported profiles still import correctly.
 - Keep the learning engine execution-free: validate command text, never run learner commands.
 - Require tests for new features and critical bug fixes before considering work complete.
+- When relevant to user-facing behavior, manually run the CLI (`cmdtrainer`) to verify end-to-end flows in addition to automated pytest coverage.
 - `AGENTS.md` is locked after this baseline; do not change it without explicit user approval.
 - Run quality checks before finalizing changes:
   - `.\.venv\Scripts\black --check src tests`

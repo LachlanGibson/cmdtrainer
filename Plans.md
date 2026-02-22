@@ -139,3 +139,4 @@ Build a profile-based command-learning CLI with guided first-time module learnin
 7. Admin module reference is consolidated under `Module details` with `Commands`, `Lessons`, and `Progression` views.
 8. Module progression reporting uses attempts history where "correct" means at least one correct attempt for a card.
 9. End-user launch path supports Python-only execution from repo root via `python cmdtrainer` and module entry via `python -m cmdtrainer`.
+10. Profile backup/transfer uses a versioned JSON export format with tolerant import normalization for older payloads and explicit rejection of unsupported newer versions.

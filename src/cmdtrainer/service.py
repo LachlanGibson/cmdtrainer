@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import json
 import random
 import shlex
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
+from . import __version__
 from .content_loader import load_modules
 from .models import Card, Module
-from .progress import Profile, ProgressStore
+from .progress import SCHEMA_VERSION, Profile, ProgressStore
+
+EXPORT_FORMAT_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -84,6 +89,17 @@ class QueueItem:
     command: str
 
 
+@dataclass(frozen=True)
+class ProfileTransferSummary:
+    """Summary emitted by profile export/import operations."""
+
+    profile_id: int
+    profile_name: str
+    module_rows: int
+    card_rows: int
+    attempt_rows: int
+
+
 class LearnService:
     """Coordinates profile state and learning flows."""
 
@@ -104,6 +120,84 @@ class LearnService:
     def delete_profile(self, profile_id: int) -> bool:
         """Delete one profile by id."""
         return self.progress.delete_profile(profile_id)
+
+    def export_profile(self, profile_id: int, export_path: Path | str) -> ProfileTransferSummary:
+        """Export a profile and all progress state to a JSON file."""
+        profile = self.progress.get_profile(profile_id)
+        if profile is None:
+            raise KeyError(profile_id)
+
+        module_rows = self.progress.list_module_progress_rows(profile_id)
+        card_rows = self.progress.list_card_progress_rows(profile_id)
+        attempt_rows = self.progress.list_attempt_rows(profile_id)
+        payload = {
+            "format_version": EXPORT_FORMAT_VERSION,
+            "exported_at": datetime.now(UTC).isoformat(),
+            "source": {
+                "app_version": __version__,
+                "schema_version": SCHEMA_VERSION,
+            },
+            "profile": {
+                "name": profile.name,
+            },
+            "module_progress": module_rows,
+            "card_progress": card_rows,
+            "attempts": attempt_rows,
+        }
+
+        path = Path(export_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return ProfileTransferSummary(
+            profile_id=profile.id,
+            profile_name=profile.name,
+            module_rows=len(module_rows),
+            card_rows=len(card_rows),
+            attempt_rows=len(attempt_rows),
+        )
+
+    def import_profile(self, import_path: Path | str, profile_name: str | None = None) -> ProfileTransferSummary:
+        """Import a profile export JSON file as a new profile."""
+        path = Path(import_path)
+        raw_obj: object = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw_obj, dict):
+            raise ValueError("Import file root must be a JSON object.")
+        raw = cast(dict[str, object], raw_obj)
+
+        version_raw: object = raw.get("format_version", 0)
+        format_version = _coerce_int(version_raw)
+        if format_version is None:
+            raise ValueError("Import file has invalid format_version.")
+        if format_version > EXPORT_FORMAT_VERSION:
+            raise ValueError(
+                f"Import file format version {format_version} is newer than supported {EXPORT_FORMAT_VERSION}."
+            )
+
+        target_name = (profile_name or "").strip()
+        if not target_name:
+            profile_section_obj = raw.get("profile")
+            if isinstance(profile_section_obj, dict):
+                profile_section = cast(dict[str, object], profile_section_obj)
+                profile_name_raw: object = profile_section.get("name")
+                if isinstance(profile_name_raw, str):
+                    target_name = profile_name_raw.strip()
+        if not target_name:
+            raise ValueError("Could not determine profile name from import file.")
+
+        now = datetime.now(UTC).isoformat()
+        module_rows = _normalize_module_progress_rows(raw.get("module_progress"), now)
+        card_rows = _normalize_card_progress_rows(raw.get("card_progress"), now)
+        attempt_rows = _normalize_attempt_rows(raw.get("attempts"), now)
+
+        profile = self.create_profile(target_name)
+        self.progress.replace_profile_data(profile.id, module_rows, card_rows, attempt_rows)
+        return ProfileTransferSummary(
+            profile_id=profile.id,
+            profile_name=profile.name,
+            module_rows=len(module_rows),
+            card_rows=len(card_rows),
+            attempt_rows=len(attempt_rows),
+        )
 
     def list_module_states(self, profile_id: int) -> list[ModuleState]:
         """Return module states sorted by module id."""
@@ -463,3 +557,135 @@ def _parse_short_option(tokens: tuple[str, ...], index: int) -> tuple[list[tuple
         return ([(token[:2], token[2:])], 1)
 
     return ([(token, None)], 1)
+
+
+def _normalize_module_progress_rows(raw: object, now: str) -> list[dict[str, object]]:
+    """Normalize raw module progress rows from import payload."""
+    if not isinstance(raw, list):
+        return []
+    raw_rows = cast(list[object], raw)
+    rows: list[dict[str, object]] = []
+    for item in raw_rows:
+        if not isinstance(item, dict):
+            continue
+        row = cast(dict[str, object], item)
+        module_id: object = row.get("module_id")
+        if not isinstance(module_id, str) or not module_id.strip():
+            continue
+        started_at_value: object = row.get("started_at")
+        started_at = started_at_value if isinstance(started_at_value, str) and started_at_value else now
+        completed_at_value: object = row.get("completed_at")
+        completed_at = completed_at_value if isinstance(completed_at_value, str) and completed_at_value else None
+        completed_version_value: object = row.get("completed_content_version")
+        completed_content_version = _coerce_int(completed_version_value)
+        rows.append(
+            {
+                "module_id": module_id.strip(),
+                "started_at": started_at,
+                "completed_at": completed_at,
+                "completed_content_version": completed_content_version,
+            }
+        )
+    return rows
+
+
+def _normalize_card_progress_rows(raw: object, now: str) -> list[dict[str, object]]:
+    """Normalize raw card progress rows from import payload."""
+    if not isinstance(raw, list):
+        return []
+    raw_rows = cast(list[object], raw)
+    rows: list[dict[str, object]] = []
+    for item in raw_rows:
+        if not isinstance(item, dict):
+            continue
+        row = cast(dict[str, object], item)
+        card_id: object = row.get("card_id")
+        if not isinstance(card_id, str) or not card_id.strip():
+            continue
+
+        streak = _coerce_int(row.get("streak", 0), default=0) or 0
+        spacing_score = _coerce_float(row.get("spacing_score", 0.0), default=0.0) or 0.0
+        interval_minutes = _coerce_int(row.get("interval_minutes", 0), default=0) or 0
+        due_at: object = row.get("due_at")
+        if not isinstance(due_at, str) or not due_at:
+            due_at = now
+        last_seen_at: object = row.get("last_seen_at")
+        if not isinstance(last_seen_at, str) or not last_seen_at:
+            last_seen_at = now
+        last_result = _coerce_int(row.get("last_result", 0), default=0) or 0
+        seen_count = _coerce_int(row.get("seen_count", 0), default=0) or 0
+
+        rows.append(
+            {
+                "card_id": card_id.strip(),
+                "streak": max(0, streak),
+                "spacing_score": max(0.0, spacing_score),
+                "interval_minutes": max(0, interval_minutes),
+                "due_at": due_at,
+                "last_seen_at": last_seen_at,
+                "last_result": 1 if last_result else 0,
+                "seen_count": max(0, seen_count),
+            }
+        )
+    return rows
+
+
+def _normalize_attempt_rows(raw: object, now: str) -> list[dict[str, object]]:
+    """Normalize raw attempts rows from import payload."""
+    if not isinstance(raw, list):
+        return []
+    raw_rows = cast(list[object], raw)
+    rows: list[dict[str, object]] = []
+    for item in raw_rows:
+        if not isinstance(item, dict):
+            continue
+        row = cast(dict[str, object], item)
+        card_id: object = row.get("card_id")
+        if not isinstance(card_id, str) or not card_id.strip():
+            continue
+        user_input = row.get("user_input", "")
+        if not isinstance(user_input, str):
+            user_input = str(user_input)
+        is_correct = _coerce_int(row.get("is_correct", 0), default=0) or 0
+        created_at: object = row.get("created_at")
+        if not isinstance(created_at, str) or not created_at:
+            created_at = now
+        rows.append(
+            {
+                "card_id": card_id.strip(),
+                "user_input": user_input,
+                "is_correct": 1 if is_correct else 0,
+                "created_at": created_at,
+            }
+        )
+    return rows
+
+
+def _coerce_int(value: object, default: int | None = None) -> int | None:
+    """Coerce value to int for import normalization."""
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+    return default
+
+
+def _coerce_float(value: object, default: float | None = None) -> float | None:
+    """Coerce value to float for import normalization."""
+    if isinstance(value, bool):
+        return float(int(value))
+    if isinstance(value, int | float):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return default
+    return default
