@@ -1,0 +1,90 @@
+{
+  "id": "docker-volume",
+  "title": "Docker Volume Management",
+  "description": "Manage named volumes for persistent container data.",
+  "prerequisites": [
+    "docker"
+  ],
+  "lessons": [
+    {
+      "id": "volume-basics",
+      "title": "List and inspect volumes",
+      "order": 1,
+      "cards": [
+        {
+          "id": "docker-volume-ls",
+          "prompt": "Using Docker volumes, list Docker volumes.",
+          "answers": [
+            "docker volume ls"
+          ],
+          "explanation": "Shows available local volumes.",
+          "command": "docker volume",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-volume-inspect",
+          "prompt": "Using Docker volumes, inspect details of volume db_data.",
+          "answers": [
+            "docker volume inspect db_data"
+          ],
+          "explanation": "Inspect includes mountpoint and driver metadata.",
+          "command": "docker volume inspect",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "volume-lifecycle",
+      "title": "Create, use, and clean volumes",
+      "order": 2,
+      "cards": [
+        {
+          "id": "docker-volume-create",
+          "prompt": "Using Docker volumes, create a volume named db_data.",
+          "answers": [
+            "docker volume create db_data"
+          ],
+          "explanation": "Creates named volume for persistence.",
+          "command": "docker volume create",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-run-mount-volume",
+          "prompt": "Using Docker volumes, run postgres with volume db_data mounted at /var/lib/postgresql/data.",
+          "answers": [
+            "docker run -v db_data:/var/lib/postgresql/data postgres"
+          ],
+          "explanation": "-v binds named volume into container path.",
+          "command": "docker run",
+          "tested_flags": [
+            "-v"
+          ]
+        },
+        {
+          "id": "docker-volume-rm",
+          "prompt": "Using Docker volumes, remove volume db_data.",
+          "answers": [
+            "docker volume rm db_data"
+          ],
+          "explanation": "Volume must not be used by any container.",
+          "command": "docker volume rm",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-volume-prune-force",
+          "prompt": "Using Docker volumes, remove all unused volumes without prompt.",
+          "answers": [
+            "docker volume prune -f",
+            "docker volume prune --force"
+          ],
+          "explanation": "Prunes dangling unused volumes.",
+          "command": "docker volume prune",
+          "tested_flags": [
+            "-f"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

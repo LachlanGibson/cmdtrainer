@@ -1,0 +1,381 @@
+{
+  "id": "docker",
+  "title": "Docker Base",
+  "description": "Core Docker command drills and fundamentals.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "docker-images-and-containers",
+      "title": "Images and containers",
+      "order": 1,
+      "cards": [
+        {
+          "id": "docker-version",
+          "prompt": "Using Docker, show Docker client/server version information.",
+          "answers": [
+            "docker version"
+          ],
+          "explanation": "Shows API and engine versions.",
+          "command": "docker version",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-ps-all",
+          "prompt": "Using Docker, list all containers, including stopped ones.",
+          "answers": [
+            "docker ps -a"
+          ],
+          "explanation": "-a includes stopped containers.",
+          "command": "docker ps",
+          "tested_flags": [
+            "-a"
+          ]
+        },
+        {
+          "id": "docker-images",
+          "prompt": "Using Docker, list local Docker images.",
+          "answers": [
+            "docker images"
+          ],
+          "explanation": "Alias for docker image ls.",
+          "command": "docker images",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-pull-nginx",
+          "prompt": "Using Docker, pull the latest nginx image.",
+          "answers": [
+            "docker pull nginx:latest",
+            "docker pull nginx"
+          ],
+          "explanation": "latest tag is default when omitted.",
+          "command": "docker pull",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-run-detached-port",
+          "prompt": "Using Docker, run nginx in detached mode mapping host 8080 to container 80, named web.",
+          "answers": [
+            "docker run -d --name web -p 8080:80 nginx"
+          ],
+          "explanation": "-d detached, -p publishes ports.",
+          "command": "docker run",
+          "tested_flags": [
+            "--name",
+            "-d",
+            "-p"
+          ]
+        },
+        {
+          "id": "docker-run-interactive-shell",
+          "prompt": "Using Docker, start an interactive Ubuntu container and open bash.",
+          "answers": [
+            "docker run -it ubuntu bash",
+            "docker run --interactive --tty ubuntu bash"
+          ],
+          "explanation": "-it gives interactive TTY session.",
+          "command": "docker run",
+          "tested_flags": [
+            "--interactive",
+            "--tty",
+            "-i",
+            "-t"
+          ]
+        },
+        {
+          "id": "docker-stop",
+          "prompt": "Using Docker, stop container web.",
+          "answers": [
+            "docker stop web"
+          ],
+          "explanation": "Sends SIGTERM then SIGKILL after timeout.",
+          "command": "docker stop",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-rm-force",
+          "prompt": "Using Docker, force remove container web.",
+          "answers": [
+            "docker rm -f web",
+            "docker rm --force web"
+          ],
+          "explanation": "--force stops running container before remove.",
+          "command": "docker rm",
+          "tested_flags": [
+            "--force",
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-start",
+          "prompt": "Using Docker, start existing stopped container web.",
+          "answers": [
+            "docker start web"
+          ],
+          "explanation": "Starts a stopped container.",
+          "command": "docker start",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-restart",
+          "prompt": "Using Docker, restart running container web.",
+          "answers": [
+            "docker restart web"
+          ],
+          "explanation": "Stops then starts container.",
+          "command": "docker restart",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-run-rm",
+          "prompt": "Using Docker, run alpine container to execute echo hi and remove it afterward.",
+          "answers": [
+            "docker run --rm alpine echo hi"
+          ],
+          "explanation": "--rm auto-removes container on exit.",
+          "command": "docker run",
+          "tested_flags": [
+            "--rm"
+          ]
+        },
+        {
+          "id": "docker-run-env",
+          "prompt": "Using Docker, run nginx with environment variable APP_ENV=dev.",
+          "answers": [
+            "docker run -e APP_ENV=dev nginx"
+          ],
+          "explanation": "-e sets container environment variable.",
+          "command": "docker run",
+          "tested_flags": [
+            "-e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "docker-inspect-logs-exec",
+      "title": "Inspect, logs, and exec",
+      "order": 2,
+      "cards": [
+        {
+          "id": "docker-logs-follow",
+          "prompt": "Using Docker, follow logs from container api.",
+          "answers": [
+            "docker logs -f api",
+            "docker logs --follow api"
+          ],
+          "explanation": "-f streams logs continuously.",
+          "command": "docker logs",
+          "tested_flags": [
+            "--follow",
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-logs-tail",
+          "prompt": "Using Docker, show last 100 lines of logs from api.",
+          "answers": [
+            "docker logs --tail 100 api"
+          ],
+          "explanation": "--tail limits log output lines.",
+          "command": "docker logs",
+          "tested_flags": [
+            "--tail"
+          ]
+        },
+        {
+          "id": "docker-exec-bash",
+          "prompt": "Using Docker, open an interactive bash shell in running container api.",
+          "answers": [
+            "docker exec -it api bash",
+            "docker exec --interactive --tty api bash"
+          ],
+          "explanation": "exec runs command inside running container.",
+          "command": "docker exec",
+          "tested_flags": [
+            "--interactive",
+            "--tty",
+            "-i",
+            "-t"
+          ]
+        },
+        {
+          "id": "docker-inspect-format-ip",
+          "prompt": "Using Docker, show the container IP address for api using format output.",
+          "answers": [
+            "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" api"
+          ],
+          "explanation": "-f uses Go template formatting.",
+          "command": "docker inspect",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-stats-no-stream",
+          "prompt": "Using Docker, show one-shot resource usage stats for all containers.",
+          "answers": [
+            "docker stats --no-stream"
+          ],
+          "explanation": "--no-stream prints once then exits.",
+          "command": "docker stats",
+          "tested_flags": [
+            "--no-stream"
+          ]
+        },
+        {
+          "id": "docker-top",
+          "prompt": "Using Docker, show running processes inside container api.",
+          "answers": [
+            "docker top api"
+          ],
+          "explanation": "Useful for process inspection.",
+          "command": "docker top",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-cp-from-container",
+          "prompt": "Using Docker, copy /app/log.txt from container api to local ./log.txt.",
+          "answers": [
+            "docker cp api:/app/log.txt ./log.txt"
+          ],
+          "explanation": "docker cp supports container:path syntax.",
+          "command": "docker cp",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "docker-build-and-cleanup",
+      "title": "Build, tag, push, and cleanup",
+      "order": 3,
+      "cards": [
+        {
+          "id": "docker-build-tag",
+          "prompt": "Using Docker, build image from current directory tagged as myapp:dev.",
+          "answers": [
+            "docker build -t myapp:dev ."
+          ],
+          "explanation": "-t sets image name and tag.",
+          "command": "docker build",
+          "tested_flags": [
+            "-t"
+          ]
+        },
+        {
+          "id": "docker-build-file",
+          "prompt": "Using Docker, build with Dockerfile.prod tagged myapp:prod from current directory.",
+          "answers": [
+            "docker build -f Dockerfile.prod -t myapp:prod ."
+          ],
+          "explanation": "-f selects non-default Dockerfile path.",
+          "command": "docker build",
+          "tested_flags": [
+            "-f",
+            "-t"
+          ]
+        },
+        {
+          "id": "docker-tag",
+          "prompt": "Using Docker, tag local image myapp:dev as registry.example.com/team/myapp:dev.",
+          "answers": [
+            "docker tag myapp:dev registry.example.com/team/myapp:dev"
+          ],
+          "explanation": "tag adds another reference to same image ID.",
+          "command": "docker tag",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-push",
+          "prompt": "Using Docker, push image registry.example.com/team/myapp:dev to registry.",
+          "answers": [
+            "docker push registry.example.com/team/myapp:dev"
+          ],
+          "explanation": "Pushes image layers to remote registry.",
+          "command": "docker push",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-system-prune",
+          "prompt": "Using Docker, remove unused data (stopped containers, dangling images, networks).",
+          "answers": [
+            "docker system prune"
+          ],
+          "explanation": "Prunes unused docker resources.",
+          "command": "docker system",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-image-prune-all",
+          "prompt": "Using Docker, remove all unused images without prompts.",
+          "answers": [
+            "docker image prune -a -f",
+            "docker image prune -f -a"
+          ],
+          "explanation": "-a includes non-dangling unused images, -f skips prompt.",
+          "command": "docker image",
+          "tested_flags": [
+            "-a",
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-login-registry",
+          "prompt": "Using Docker, log in to registry.example.com.",
+          "answers": [
+            "docker login registry.example.com"
+          ],
+          "explanation": "Stores auth credentials for registry access.",
+          "command": "docker login",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-logout-registry",
+          "prompt": "Using Docker, log out from registry.example.com.",
+          "answers": [
+            "docker logout registry.example.com"
+          ],
+          "explanation": "Removes stored credentials for that registry.",
+          "command": "docker logout",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-container-prune",
+          "prompt": "Using Docker, remove all stopped containers without prompt.",
+          "answers": [
+            "docker container prune -f",
+            "docker container prune --force"
+          ],
+          "explanation": "Prunes stopped containers quickly.",
+          "command": "docker container",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-base-network-ls",
+          "prompt": "Using Docker, list docker networks.",
+          "answers": [
+            "docker network ls"
+          ],
+          "explanation": "Shows available networks.",
+          "command": "docker network",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-base-volume-ls",
+          "prompt": "Using Docker, list docker volumes.",
+          "answers": [
+            "docker volume ls"
+          ],
+          "explanation": "Shows local docker volumes.",
+          "command": "docker volume",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

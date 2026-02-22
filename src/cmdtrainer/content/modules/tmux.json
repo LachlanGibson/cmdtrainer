@@ -1,0 +1,163 @@
+{
+  "id": "tmux",
+  "title": "tmux",
+  "description": "Terminal multiplexer workflows for sessions, windows, and panes.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "sessions-and-windows",
+      "title": "Sessions and windows",
+      "order": 1,
+      "cards": [
+        {
+          "id": "tmux-new-session",
+          "prompt": "Using tmux, create a new session named dev.",
+          "answers": [
+            "tmux new -s dev"
+          ],
+          "explanation": "-s assigns a session name.",
+          "command": "tmux new",
+          "tested_flags": [
+            "-s"
+          ]
+        },
+        {
+          "id": "tmux-list-sessions",
+          "prompt": "Using tmux, list active sessions.",
+          "answers": [
+            "tmux ls"
+          ],
+          "explanation": "ls shows all running tmux sessions.",
+          "command": "tmux ls",
+          "tested_flags": []
+        },
+        {
+          "id": "tmux-attach-session",
+          "prompt": "Using tmux, attach to session dev.",
+          "answers": [
+            "tmux attach -t dev"
+          ],
+          "explanation": "-t selects target session.",
+          "command": "tmux attach",
+          "tested_flags": [
+            "-t"
+          ]
+        },
+        {
+          "id": "tmux-new-window",
+          "prompt": "Using tmux, create a new window named editor.",
+          "answers": [
+            "tmux new-window -n editor"
+          ],
+          "explanation": "-n sets the window name.",
+          "command": "tmux new-window",
+          "tested_flags": [
+            "-n"
+          ]
+        },
+        {
+          "id": "tmux-rename-window",
+          "prompt": "Using tmux, rename the current window to api.",
+          "answers": [
+            "tmux rename-window api"
+          ],
+          "explanation": "rename-window updates current window label.",
+          "command": "tmux rename-window",
+          "tested_flags": []
+        },
+        {
+          "id": "tmux-kill-session",
+          "prompt": "Using tmux, kill session dev.",
+          "answers": [
+            "tmux kill-session -t dev"
+          ],
+          "explanation": "Use -t to identify the session to terminate.",
+          "command": "tmux kill-session",
+          "tested_flags": [
+            "-t"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "panes-and-controls",
+      "title": "Panes and controls",
+      "order": 2,
+      "cards": [
+        {
+          "id": "tmux-split-horizontal",
+          "prompt": "Using tmux, split the current pane horizontally.",
+          "answers": [
+            "tmux split-window -h"
+          ],
+          "explanation": "-h creates a side-by-side split.",
+          "command": "tmux split-window",
+          "tested_flags": [
+            "-h"
+          ]
+        },
+        {
+          "id": "tmux-split-vertical",
+          "prompt": "Using tmux, split the current pane vertically.",
+          "answers": [
+            "tmux split-window -v"
+          ],
+          "explanation": "-v creates top/bottom split.",
+          "command": "tmux split-window",
+          "tested_flags": [
+            "-v"
+          ]
+        },
+        {
+          "id": "tmux-select-window",
+          "prompt": "Using tmux, switch to window 2.",
+          "answers": [
+            "tmux select-window -t 2"
+          ],
+          "explanation": "select-window jumps directly to target window.",
+          "command": "tmux select-window",
+          "tested_flags": [
+            "-t"
+          ]
+        },
+        {
+          "id": "tmux-send-keys",
+          "prompt": "Using tmux, send command npm test and Enter to pane dev:1.0.",
+          "answers": [
+            "tmux send-keys -t dev:1.0 \"npm test\" C-m"
+          ],
+          "explanation": "C-m simulates Enter for send-keys.",
+          "command": "tmux send-keys",
+          "tested_flags": [
+            "-t"
+          ]
+        },
+        {
+          "id": "tmux-enable-mouse",
+          "prompt": "Using tmux, enable mouse support globally.",
+          "answers": [
+            "tmux set-option -g mouse on"
+          ],
+          "explanation": "-g sets the option at global scope.",
+          "command": "tmux set-option",
+          "tested_flags": [
+            "-g"
+          ]
+        },
+        {
+          "id": "tmux-list-keys",
+          "prompt": "Using tmux, list all key bindings.",
+          "answers": [
+            "tmux list-keys"
+          ],
+          "explanation": "Useful for discovering or debugging keymaps.",
+          "command": "tmux list-keys",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

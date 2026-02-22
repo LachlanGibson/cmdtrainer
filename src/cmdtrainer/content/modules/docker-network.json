@@ -1,0 +1,100 @@
+{
+  "id": "docker-network",
+  "title": "Docker Network Management",
+  "description": "Manage Docker networks for container connectivity.",
+  "prerequisites": [
+    "docker"
+  ],
+  "lessons": [
+    {
+      "id": "network-basics",
+      "title": "List and inspect networks",
+      "order": 1,
+      "cards": [
+        {
+          "id": "docker-network-ls",
+          "prompt": "Using Docker networking, list all Docker networks.",
+          "answers": [
+            "docker network ls"
+          ],
+          "explanation": "Shows built-in and user-created networks.",
+          "command": "docker network",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-network-inspect",
+          "prompt": "Using Docker networking, inspect details of network app_net.",
+          "answers": [
+            "docker network inspect app_net"
+          ],
+          "explanation": "Inspect shows subnet, gateway, and attached containers.",
+          "command": "docker network inspect",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "network-lifecycle",
+      "title": "Create and clean networks",
+      "order": 2,
+      "cards": [
+        {
+          "id": "docker-network-create-bridge",
+          "prompt": "Using Docker networking, create a bridge network named app_net.",
+          "answers": [
+            "docker network create --driver bridge app_net"
+          ],
+          "explanation": "Bridge is the common user-defined local network driver.",
+          "command": "docker network create",
+          "tested_flags": [
+            "--driver"
+          ]
+        },
+        {
+          "id": "docker-network-connect",
+          "prompt": "Using Docker networking, connect running container api to network app_net.",
+          "answers": [
+            "docker network connect app_net api"
+          ],
+          "explanation": "Connects container to an additional network.",
+          "command": "docker network connect",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-network-disconnect",
+          "prompt": "Using Docker networking, disconnect container api from network app_net.",
+          "answers": [
+            "docker network disconnect app_net api"
+          ],
+          "explanation": "Removes container from a specific network.",
+          "command": "docker network disconnect",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-network-rm",
+          "prompt": "Using Docker networking, remove network app_net.",
+          "answers": [
+            "docker network rm app_net"
+          ],
+          "explanation": "Network must have no attached containers.",
+          "command": "docker network rm",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-network-prune-force",
+          "prompt": "Using Docker networking, remove all unused Docker networks without prompt.",
+          "answers": [
+            "docker network prune -f",
+            "docker network prune --force"
+          ],
+          "explanation": "Prunes only networks not used by containers.",
+          "command": "docker network prune",
+          "tested_flags": [
+            "-f"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

@@ -1,0 +1,168 @@
+{
+  "id": "process-tools",
+  "title": "Process Tools",
+  "description": "Find, prioritize, and control processes during development workflows.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "find-and-signal",
+      "title": "Find and signal processes",
+      "order": 1,
+      "cards": [
+        {
+          "id": "process-tools-pgrep-python",
+          "prompt": "Using Linux process tools, search for processes matching python and show PID plus command line.",
+          "answers": [
+            "pgrep -af python"
+          ],
+          "explanation": "-a prints full command line, -f matches against full command.",
+          "command": "pgrep",
+          "tested_flags": [
+            "-a",
+            "-f"
+          ]
+        },
+        {
+          "id": "process-tools-pgrep-user",
+          "prompt": "Using Linux process tools, list PIDs of nginx processes owned by user deploy.",
+          "answers": [
+            "pgrep -u deploy nginx"
+          ],
+          "explanation": "-u filters to processes owned by a user.",
+          "command": "pgrep",
+          "tested_flags": [
+            "-u"
+          ]
+        },
+        {
+          "id": "process-tools-pkill-full",
+          "prompt": "Using Linux process tools, terminate processes matching full command node server.js.",
+          "answers": [
+            "pkill -f \"node server.js\""
+          ],
+          "explanation": "-f matches the entire command line.",
+          "command": "pkill",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "process-tools-pkill-sigterm",
+          "prompt": "Using Linux process tools, send SIGTERM to all sleep processes.",
+          "answers": [
+            "pkill -15 sleep"
+          ],
+          "explanation": "-15 is SIGTERM; graceful stop when possible.",
+          "command": "pkill",
+          "tested_flags": [
+            "-15"
+          ]
+        },
+        {
+          "id": "process-tools-pkill-kill",
+          "prompt": "Using Linux process tools, force-kill all sleep processes with SIGKILL.",
+          "answers": [
+            "pkill -9 sleep"
+          ],
+          "explanation": "-9 is SIGKILL.",
+          "command": "pkill",
+          "tested_flags": [
+            "-9"
+          ]
+        },
+        {
+          "id": "process-tools-pstree",
+          "prompt": "Using Linux process tools, show a process tree for PID 1.",
+          "answers": [
+            "pstree -p 1"
+          ],
+          "explanation": "-p includes process IDs in the tree output.",
+          "command": "pstree",
+          "tested_flags": [
+            "-p"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "priority-and-background",
+      "title": "Priority and background execution",
+      "order": 2,
+      "cards": [
+        {
+          "id": "process-tools-nohup",
+          "prompt": "Using Linux process tools, start python worker.py immune to hangups.",
+          "answers": [
+            "nohup python worker.py"
+          ],
+          "explanation": "nohup keeps the process alive after terminal disconnect.",
+          "command": "nohup",
+          "tested_flags": []
+        },
+        {
+          "id": "process-tools-nice",
+          "prompt": "Using Linux process tools, start long_task.sh with nice value 10.",
+          "answers": [
+            "nice -n 10 ./long_task.sh"
+          ],
+          "explanation": "-n sets niceness (CPU scheduling priority).",
+          "command": "nice",
+          "tested_flags": [
+            "-n"
+          ]
+        },
+        {
+          "id": "process-tools-renice",
+          "prompt": "Using Linux process tools, change PID 4242 to nice value -5.",
+          "answers": [
+            "renice -n -5 -p 4242",
+            "renice -p 4242 -n -5"
+          ],
+          "explanation": "renice updates priority of a running process.",
+          "command": "renice",
+          "tested_flags": [
+            "-n",
+            "-p"
+          ]
+        },
+        {
+          "id": "process-tools-watch",
+          "prompt": "Using Linux process tools, run df -h every 2 seconds.",
+          "answers": [
+            "watch -n 2 \"df -h\""
+          ],
+          "explanation": "watch repeats a command at a fixed interval.",
+          "command": "watch",
+          "tested_flags": [
+            "-n"
+          ]
+        },
+        {
+          "id": "process-tools-time",
+          "prompt": "Using Linux process tools, measure execution time of pytest -q.",
+          "answers": [
+            "time pytest -q"
+          ],
+          "explanation": "time reports real/user/sys duration for a command.",
+          "command": "time",
+          "tested_flags": []
+        },
+        {
+          "id": "process-tools-time-verbose",
+          "prompt": "Using Linux process tools, run time in verbose mode for make test.",
+          "answers": [
+            "/usr/bin/time -v make test"
+          ],
+          "explanation": "/usr/bin/time -v includes memory and context switch stats.",
+          "command": "/usr/bin/time",
+          "tested_flags": [
+            "-v"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}
