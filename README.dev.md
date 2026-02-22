@@ -44,6 +44,19 @@ Card content fields include:
   - profile progression summary (attempted/correct totals + lesson breakdown).
 - Progression uses attempts history: "correct" means at least one correct attempt for a card.
 
+## Profile Export/Import
+- Export/import is implemented in `LearnService`:
+  - `export_profile(profile_id, export_path)`
+  - `import_profile(import_path, profile_name=None)`
+- Menu placement:
+  - export is available from Admin for the currently selected profile,
+  - import is available from the Profiles menu before selecting a profile.
+- Export payload is JSON with `format_version`, source metadata, profile name, and progress rows.
+- Import compatibility rules:
+  - reject unsupported newer `format_version`,
+  - accept missing/legacy fields by applying safe defaults,
+  - ignore malformed rows that cannot be normalized.
+
 ## Quality Gates
 Run before finalizing:
 ```powershell

@@ -92,6 +92,7 @@ def _select_profile(
         else:
             print_fn("No profiles yet.")
         print_fn("n) New profile")
+        print_fn("i) Import profile from file")
         print_fn("d) Delete profile")
         print_fn("q) Quit")
 
@@ -111,6 +112,9 @@ def _select_profile(
             return (created.id, created.name)
         if choice == "d":
             _delete_profile_flow(service, input_fn, print_fn)
+            continue
+        if choice == "i":
+            _import_profile_flow(service, input_fn, print_fn)
             continue
 
         if choice.isdigit():
@@ -411,6 +415,7 @@ def _admin_flow(service: LearnService, profile_id: int, input_fn: InputFn, print
         print_fn("1) Module details")
         print_fn("2) View schedule queue")
         print_fn("3) Force unlock module (+ dependencies)")
+        print_fn("4) Export current profile")
         print_fn("b) Back")
         print_fn("q) Quit")
         choice = input_fn("Choose admin option: ").strip().lower()
@@ -424,6 +429,8 @@ def _admin_flow(service: LearnService, profile_id: int, input_fn: InputFn, print
             _queue_flow(service, profile_id, print_fn)
         elif choice == "3":
             _force_unlock_flow(service, profile_id, input_fn, print_fn)
+        elif choice == "4":
+            _export_profile_flow(service, profile_id, input_fn, print_fn)
         else:
             print_fn("Invalid choice.")
 
@@ -485,6 +492,44 @@ def _queue_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> No
             f"{interval_label:>{interval_width}} "
             f"{item.command}"
         )
+
+
+def _export_profile_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+    """Export current profile progress to a JSON file."""
+    print_fn("\n=== Export Profile ===")
+    path_text = input_fn("Export file path: ").strip()
+    if not path_text:
+        print_fn("File path is required.")
+        return
+    try:
+        summary = service.export_profile(profile_id, path_text)
+    except Exception as exc:
+        print_fn(f"Export failed: {exc}")
+        return
+    print_fn(f"Exported profile '{summary.profile_name}' to {path_text}")
+    print_fn(f"- module rows: {summary.module_rows}")
+    print_fn(f"- card rows: {summary.card_rows}")
+    print_fn(f"- attempt rows: {summary.attempt_rows}")
+
+
+def _import_profile_flow(service: LearnService, input_fn: InputFn, print_fn: PrintFn) -> None:
+    """Import profile progress from a JSON file as a new profile."""
+    print_fn("\n=== Import Profile ===")
+    path_text = input_fn("Import file path: ").strip()
+    if not path_text:
+        print_fn("File path is required.")
+        return
+    name_text = input_fn("Imported profile name (blank = file value): ").strip()
+    target_name = name_text if name_text else None
+    try:
+        summary = service.import_profile(path_text, target_name)
+    except Exception as exc:
+        print_fn(f"Import failed: {exc}")
+        return
+    print_fn(f"Imported profile '{summary.profile_name}'.")
+    print_fn(f"- module rows: {summary.module_rows}")
+    print_fn(f"- card rows: {summary.card_rows}")
+    print_fn(f"- attempt rows: {summary.attempt_rows}")
 
 
 def _format_local_due(due_at: str) -> str:

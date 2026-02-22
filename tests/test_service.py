@@ -1,8 +1,10 @@
-﻿from datetime import UTC, datetime, timedelta
+import json
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from cmdtrainer.models import Card
-from cmdtrainer.service import LearnService
+from cmdtrainer.service import LearnService, _coerce_float, _coerce_int
 
 
 def test_module_states_unlocking() -> None:
@@ -147,11 +149,9 @@ def test_due_cards_from_completed_then_started_fallback() -> None:
     first_card = module.lessons[0].cards[0]
     service.record_answer(profile.id, first_card, first_card.answers[0])
 
-    # no completed modules yet -> fallback to started modules
     due = service.due_cards(profile.id, limit=5)
     assert len(due) > 0
 
-    # complete module and force one card overdue
     for lesson in module.lessons:
         for card in lesson.cards:
             service.record_answer(profile.id, card, card.answers[0])
@@ -275,3 +275,161 @@ def test_practice_queue_contains_new_due_and_scheduled() -> None:
     by_id = {item.card_id: item for item in items}
     assert by_id[first.id].status in {"due", "scheduled"}
     assert by_id[second.id].status == "new"
+
+
+def test_export_import_profile_round_trip(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    source = service.create_profile("export-source")
+    module = service.begin_module(source.id, "base-linux")
+    card = module.lessons[0].cards[0]
+    service.record_answer(source.id, card, card.answers[0])
+    service.progress.mark_module_completed(source.id, "base-linux", module.content_version)
+
+    export_path = tmp_path / "profile-export.json"
+    export_summary = service.export_profile(source.id, export_path)
+    assert export_summary.profile_name == "export-source"
+    assert export_summary.module_rows >= 1
+    assert export_summary.card_rows >= 1
+    assert export_summary.attempt_rows >= 1
+
+    import_summary = service.import_profile(export_path, "imported-copy")
+    assert import_summary.profile_name == "imported-copy"
+    imported_id = import_summary.profile_id
+    assert service.progress.module_state(imported_id, "base-linux")[1] is True
+    assert service.progress.get_card_schedule(imported_id, card.id) is not None
+
+
+def test_import_profile_rejects_newer_format_version(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    payload = {
+        "format_version": 999,
+        "profile": {"name": "future-profile"},
+        "module_progress": [],
+        "card_progress": [],
+        "attempts": [],
+    }
+    path = tmp_path / "future.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    try:
+        service.import_profile(path)
+        raise AssertionError("Expected ValueError for newer format version.")
+    except ValueError as exc:
+        assert "newer than supported" in str(exc)
+
+
+def test_import_profile_legacy_payload_without_version(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    payload = {
+        "profile": {"name": "legacy-profile"},
+        "module_progress": [{"module_id": "base-linux"}],
+        "card_progress": [{"card_id": "base-linux-pwd"}],
+        "attempts": [{"card_id": "base-linux-pwd", "user_input": "pwd", "is_correct": 1}],
+    }
+    path = tmp_path / "legacy.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    summary = service.import_profile(path)
+    assert summary.profile_name == "legacy-profile"
+    assert summary.module_rows == 1
+    assert summary.card_rows == 1
+    assert summary.attempt_rows == 1
+
+
+def test_export_profile_missing_raises_key_error(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    path = tmp_path / "missing.json"
+    try:
+        service.export_profile(999, path)
+        raise AssertionError("Expected KeyError for missing profile.")
+    except KeyError:
+        pass
+
+
+def test_import_profile_invalid_root_object(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    path = tmp_path / "bad-root.json"
+    path.write_text(json.dumps(["not-an-object"]), encoding="utf-8")
+    try:
+        service.import_profile(path)
+        raise AssertionError("Expected ValueError for non-object root.")
+    except ValueError as exc:
+        assert "JSON object" in str(exc)
+
+
+def test_import_profile_invalid_format_version_type(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    path = tmp_path / "bad-version.json"
+    path.write_text(json.dumps({"format_version": {"x": 1}, "profile": {"name": "n"}}), encoding="utf-8")
+    try:
+        service.import_profile(path)
+        raise AssertionError("Expected ValueError for invalid format_version.")
+    except ValueError as exc:
+        assert "invalid format_version" in str(exc)
+
+
+def test_import_profile_missing_name_raises(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    path = tmp_path / "no-name.json"
+    path.write_text(json.dumps({"format_version": 1, "profile": {}, "module_progress": []}), encoding="utf-8")
+    try:
+        service.import_profile(path)
+        raise AssertionError("Expected ValueError for missing profile name.")
+    except ValueError as exc:
+        assert "determine profile name" in str(exc)
+
+
+def test_import_profile_ignores_malformed_rows(tmp_path: Path) -> None:
+    service = LearnService(":memory:")
+    payload = {
+        "format_version": 1,
+        "profile": {"name": "malformed"},
+        "module_progress": [{"module_id": ""}, {"not_module": True}],
+        "card_progress": [{"card_id": ""}, {"streak": "x"}],
+        "attempts": [{"card_id": ""}, {"is_correct": 1}],
+    }
+    path = tmp_path / "malformed.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    summary = service.import_profile(path)
+    assert summary.profile_name == "malformed"
+    assert summary.module_rows == 0
+    assert summary.card_rows == 0
+    assert summary.attempt_rows == 0
+
+
+def test_numeric_coercion_helpers() -> None:
+    assert _coerce_int("3") == 3
+    assert _coerce_int("bad", default=7) == 7
+    assert _coerce_int(object(), default=None) is None
+    assert _coerce_float("2.5") == 2.5
+    assert _coerce_float("bad", default=1.25) == 1.25
+    assert _coerce_float(object(), default=None) is None
+
+
+def test_import_profile_fixture_from_v1_0_0() -> None:
+    service = LearnService(":memory:")
+    fixture_path = Path(__file__).parent / "fixtures" / "profile_export_v1_0_0.json"
+
+    summary = service.import_profile(fixture_path, "fixture-imported")
+    assert summary.profile_name == "fixture-imported"
+    assert summary.module_rows == 2
+    assert summary.card_rows == 2
+    assert summary.attempt_rows == 3
+
+    imported_id = summary.profile_id
+    base_started, base_completed, base_version = service.progress.module_state(imported_id, "base-linux")
+    git_started, git_completed, _ = service.progress.module_state(imported_id, "git")
+    assert base_started is True
+    assert base_completed is True
+    assert base_version == 1
+    assert git_started is True
+    assert git_completed is False
+
+    pwd_schedule = service.progress.get_card_schedule(imported_id, "base-linux-pwd")
+    ls_schedule = service.progress.get_card_schedule(imported_id, "base-linux-ls-long-all")
+    assert pwd_schedule is not None
+    assert pwd_schedule.streak == 2
+    assert pwd_schedule.seen_count == 3
+    assert ls_schedule is not None
+    assert ls_schedule.streak == 0
+    assert ls_schedule.seen_count == 1
