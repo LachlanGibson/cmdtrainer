@@ -1,0 +1,147 @@
+{
+  "id": "http-clients",
+  "title": "HTTP CLI Clients",
+  "description": "Practice API requests and downloads with curl and wget.",
+  "prerequisites": [
+    "network-basics"
+  ],
+  "lessons": [
+    {
+      "id": "curl-basics",
+      "title": "curl essentials",
+      "order": 1,
+      "cards": [
+        {
+          "id": "http-clients-curl-head",
+          "prompt": "Using HTTP client tools, fetch only response headers for https://example.com.",
+          "answers": [
+            "curl -I https://example.com"
+          ],
+          "explanation": "-I performs a HEAD-style request and prints headers.",
+          "command": "curl",
+          "tested_flags": [
+            "-I"
+          ]
+        },
+        {
+          "id": "http-clients-curl-follow-redirect",
+          "prompt": "Using HTTP client tools, request https://example.com and follow redirects.",
+          "answers": [
+            "curl -L https://example.com"
+          ],
+          "explanation": "-L follows 301/302 redirects.",
+          "command": "curl",
+          "tested_flags": [
+            "-L"
+          ]
+        },
+        {
+          "id": "http-clients-curl-output-file",
+          "prompt": "Using HTTP client tools, download https://example.com/app.tar.gz to app.tar.gz.",
+          "answers": [
+            "curl -o app.tar.gz https://example.com/app.tar.gz"
+          ],
+          "explanation": "-o writes response body to a file.",
+          "command": "curl",
+          "tested_flags": [
+            "-o"
+          ]
+        },
+        {
+          "id": "http-clients-curl-json-post",
+          "prompt": "Using HTTP client tools, POST JSON {'name':'api'} to https://api.example.com/projects.",
+          "answers": [
+            "curl -X POST -H \"Content-Type: application/json\" -d '{\"name\":\"api\"}' https://api.example.com/projects",
+            "curl -H \"Content-Type: application/json\" -X POST -d '{\"name\":\"api\"}' https://api.example.com/projects"
+          ],
+          "explanation": "-X selects method, -H sets headers, -d sends body data.",
+          "command": "curl",
+          "tested_flags": [
+            "-H",
+            "-X",
+            "-d"
+          ]
+        },
+        {
+          "id": "http-clients-curl-bearer",
+          "prompt": "Using HTTP client tools, GET https://api.example.com/me with bearer token TOKEN123.",
+          "answers": [
+            "curl -H \"Authorization: Bearer TOKEN123\" https://api.example.com/me"
+          ],
+          "explanation": "Authorization header carries bearer token credentials.",
+          "command": "curl",
+          "tested_flags": [
+            "-H"
+          ]
+        },
+        {
+          "id": "http-clients-curl-retry",
+          "prompt": "Using HTTP client tools, retry up to 3 times with a 2-second delay for https://api.example.com/health.",
+          "answers": [
+            "curl --retry 3 --retry-delay 2 https://api.example.com/health"
+          ],
+          "explanation": "Useful for flaky endpoints in scripts/CI.",
+          "command": "curl",
+          "tested_flags": [
+            "--retry",
+            "--retry-delay"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wget-basics",
+      "title": "wget essentials",
+      "order": 2,
+      "cards": [
+        {
+          "id": "http-clients-wget-download",
+          "prompt": "Using HTTP client tools, download https://example.com/file.tgz with wget.",
+          "answers": [
+            "wget https://example.com/file.tgz"
+          ],
+          "explanation": "wget saves to current directory by default.",
+          "command": "wget",
+          "tested_flags": []
+        },
+        {
+          "id": "http-clients-wget-output",
+          "prompt": "Using HTTP client tools, download https://example.com/file.tgz and save as release.tgz.",
+          "answers": [
+            "wget -O release.tgz https://example.com/file.tgz"
+          ],
+          "explanation": "-O sets explicit output file name.",
+          "command": "wget",
+          "tested_flags": [
+            "-O"
+          ]
+        },
+        {
+          "id": "http-clients-wget-continue",
+          "prompt": "Using HTTP client tools, resume a partial download for https://example.com/big.iso.",
+          "answers": [
+            "wget -c https://example.com/big.iso"
+          ],
+          "explanation": "-c continues from existing partial file.",
+          "command": "wget",
+          "tested_flags": [
+            "-c"
+          ]
+        },
+        {
+          "id": "http-clients-wget-rate-limit",
+          "prompt": "Using HTTP client tools, download https://example.com/backup.tar while limiting speed to 200k.",
+          "answers": [
+            "wget --limit-rate=200k https://example.com/backup.tar"
+          ],
+          "explanation": "--limit-rate avoids saturating network links.",
+          "command": "wget",
+          "tested_flags": [
+            "--limit-rate"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

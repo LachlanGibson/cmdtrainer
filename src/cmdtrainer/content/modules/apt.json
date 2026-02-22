@@ -1,0 +1,216 @@
+{
+  "id": "apt",
+  "title": "APT",
+  "description": "Common apt package manager commands.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "apt-refresh-and-install",
+      "title": "Refresh and install",
+      "order": 1,
+      "cards": [
+        {
+          "id": "apt-update",
+          "prompt": "Using apt, update package index metadata.",
+          "answers": [
+            "apt update"
+          ],
+          "explanation": "Run update before installs/upgrades.",
+          "command": "apt update",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-upgrade",
+          "prompt": "Using apt, upgrade all installed packages to latest available versions.",
+          "answers": [
+            "apt upgrade"
+          ],
+          "explanation": "Upgrades packages without removing others by default.",
+          "command": "apt upgrade",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-full-upgrade",
+          "prompt": "Using apt, run a full upgrade that can handle dependency changes.",
+          "answers": [
+            "apt full-upgrade"
+          ],
+          "explanation": "full-upgrade can remove/replace packages when needed.",
+          "command": "apt full-upgrade",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-install-curl",
+          "prompt": "Using apt, install curl package.",
+          "answers": [
+            "apt install curl"
+          ],
+          "explanation": "Installs package and dependencies.",
+          "command": "apt install",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-install-yes",
+          "prompt": "Using apt, install git and automatically answer yes to prompts.",
+          "answers": [
+            "apt install -y git",
+            "apt -y install git"
+          ],
+          "explanation": "-y auto-confirms prompts.",
+          "command": "apt install",
+          "tested_flags": [
+            "-y"
+          ]
+        },
+        {
+          "id": "apt-reinstall",
+          "prompt": "Using apt, reinstall openssh-client package.",
+          "answers": [
+            "apt install --reinstall openssh-client"
+          ],
+          "explanation": "--reinstall reinstalls even if already installed.",
+          "command": "apt install",
+          "tested_flags": [
+            "--reinstall"
+          ]
+        },
+        {
+          "id": "apt-install-no-recommends",
+          "prompt": "Using apt, install vim without recommended extra packages.",
+          "answers": [
+            "apt install --no-install-recommends vim"
+          ],
+          "explanation": "Keeps install footprint smaller.",
+          "command": "apt install",
+          "tested_flags": [
+            "--no-install-recommends"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apt-query-and-cleanup",
+      "title": "Query and cleanup",
+      "order": 2,
+      "cards": [
+        {
+          "id": "apt-search-nginx",
+          "prompt": "Using apt, search available packages for nginx.",
+          "answers": [
+            "apt search nginx"
+          ],
+          "explanation": "Searches package names/descriptions.",
+          "command": "apt search",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-show",
+          "prompt": "Using apt, show metadata for package python3-pip.",
+          "answers": [
+            "apt show python3-pip"
+          ],
+          "explanation": "Displays package info like version and dependencies.",
+          "command": "apt show",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-list-installed",
+          "prompt": "Using apt, list all installed packages.",
+          "answers": [
+            "apt list --installed"
+          ],
+          "explanation": "Useful for inventory checks.",
+          "command": "apt list",
+          "tested_flags": [
+            "--installed"
+          ]
+        },
+        {
+          "id": "apt-remove",
+          "prompt": "Using apt, remove package nginx but keep config files.",
+          "answers": [
+            "apt remove nginx"
+          ],
+          "explanation": "remove keeps system config files.",
+          "command": "apt remove",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-purge",
+          "prompt": "Using apt, completely remove nginx including config files.",
+          "answers": [
+            "apt purge nginx"
+          ],
+          "explanation": "purge removes package and config files.",
+          "command": "apt purge",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-autoremove",
+          "prompt": "Using apt, remove unused packages installed as dependencies.",
+          "answers": [
+            "apt autoremove"
+          ],
+          "explanation": "Cleans orphaned dependency packages.",
+          "command": "apt autoremove",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-clean",
+          "prompt": "Using apt, clear local apt package cache.",
+          "answers": [
+            "apt clean"
+          ],
+          "explanation": "Removes downloaded package files from cache.",
+          "command": "apt clean",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-list-upgradable",
+          "prompt": "Using apt, list packages that can be upgraded.",
+          "answers": [
+            "apt list --upgradable"
+          ],
+          "explanation": "Shows currently upgradable packages.",
+          "command": "apt list",
+          "tested_flags": [
+            "--upgradable"
+          ]
+        },
+        {
+          "id": "apt-mark-hold",
+          "prompt": "Using apt, mark package docker-ce on hold to prevent upgrades.",
+          "answers": [
+            "apt-mark hold docker-ce"
+          ],
+          "explanation": "Hold prevents package upgrades.",
+          "command": "apt-mark hold",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-mark-unhold",
+          "prompt": "Using apt, remove hold from package docker-ce.",
+          "answers": [
+            "apt-mark unhold docker-ce"
+          ],
+          "explanation": "Allows package upgrades again.",
+          "command": "apt-mark unhold",
+          "tested_flags": []
+        },
+        {
+          "id": "apt-policy",
+          "prompt": "Using apt, show apt policy information for package nginx.",
+          "answers": [
+            "apt policy nginx"
+          ],
+          "explanation": "Displays candidate and installed versions with sources.",
+          "command": "apt policy",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

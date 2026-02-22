@@ -1,0 +1,407 @@
+{
+  "id": "base-linux",
+  "title": "Core Linux Commands",
+  "description": "Foundational shell commands and common flags.",
+  "prerequisites": [],
+  "lessons": [
+    {
+      "id": "navigation",
+      "title": "Navigation and listing",
+      "order": 1,
+      "cards": [
+        {
+          "id": "base-linux-pwd",
+          "prompt": "In a Linux shell, print the current directory.",
+          "answers": [
+            "pwd"
+          ],
+          "explanation": "pwd means print working directory.",
+          "command": "pwd",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-ls-long-all",
+          "prompt": "In a Linux shell, list files in long format, including hidden files.",
+          "answers": [
+            "ls -la",
+            "ls -al"
+          ],
+          "explanation": "-l long format, -a includes hidden files.",
+          "command": "ls",
+          "tested_flags": [
+            "-a",
+            "-l"
+          ]
+        },
+        {
+          "id": "base-linux-ls-human",
+          "prompt": "In a Linux shell, list files in long format with human-readable sizes.",
+          "answers": [
+            "ls -lh",
+            "ls -hl"
+          ],
+          "explanation": "-h formats sizes like K, M, G.",
+          "command": "ls",
+          "tested_flags": [
+            "-h",
+            "-l"
+          ]
+        },
+        {
+          "id": "base-linux-cd-home",
+          "prompt": "In a Linux shell, change to your home directory.",
+          "answers": [
+            "cd ~"
+          ],
+          "explanation": "~ expands to your user home.",
+          "command": "cd",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-cd-prev",
+          "prompt": "In a Linux shell, switch back to the previous working directory.",
+          "answers": [
+            "cd -"
+          ],
+          "explanation": "cd - toggles between current and previous directory.",
+          "command": "cd",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-tree-ish",
+          "prompt": "In a Linux shell, list files recursively from current directory using ls.",
+          "answers": [
+            "ls -R"
+          ],
+          "explanation": "-R lists subdirectories recursively.",
+          "command": "ls",
+          "tested_flags": [
+            "-R"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "files-and-text",
+      "title": "File and text operations",
+      "order": 2,
+      "cards": [
+        {
+          "id": "base-linux-mkdir-parents",
+          "prompt": "In a Linux shell, create nested directories project/src/tests in one command.",
+          "answers": [
+            "mkdir -p project/src/tests"
+          ],
+          "explanation": "-p creates parent directories as needed.",
+          "command": "mkdir",
+          "tested_flags": [
+            "-p"
+          ]
+        },
+        {
+          "id": "base-linux-touch-two",
+          "prompt": "In a Linux shell, create empty files app.py and README.md.",
+          "answers": [
+            "touch app.py README.md"
+          ],
+          "explanation": "touch creates files if missing.",
+          "command": "touch",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-cp-recursive",
+          "prompt": "In a Linux shell, copy directory src_dir into backup_dir recursively.",
+          "answers": [
+            "cp -r src_dir backup_dir"
+          ],
+          "explanation": "-r copies directories recursively.",
+          "command": "cp",
+          "tested_flags": [
+            "-r"
+          ]
+        },
+        {
+          "id": "base-linux-cp-archive",
+          "prompt": "In a Linux shell, copy directory website to website.bak preserving permissions and times.",
+          "answers": [
+            "cp -a website website.bak"
+          ],
+          "explanation": "-a is archive mode.",
+          "command": "cp",
+          "tested_flags": [
+            "-a"
+          ]
+        },
+        {
+          "id": "base-linux-mv-rename",
+          "prompt": "In a Linux shell, rename file notes.txt to notes-old.txt.",
+          "answers": [
+            "mv notes.txt notes-old.txt"
+          ],
+          "explanation": "mv is used for moves and renames.",
+          "command": "mv",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-rm-recursive-force",
+          "prompt": "In a Linux shell, delete directory build_cache recursively without prompts.",
+          "answers": [
+            "rm -rf build_cache",
+            "rm -fr build_cache"
+          ],
+          "explanation": "-r recursive, -f force. Use carefully.",
+          "command": "rm",
+          "tested_flags": [
+            "-f",
+            "-r"
+          ]
+        },
+        {
+          "id": "base-linux-cat-file",
+          "prompt": "In a Linux shell, print the full contents of config.yml.",
+          "answers": [
+            "cat config.yml"
+          ],
+          "explanation": "cat outputs full file content.",
+          "command": "cat",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-head-lines",
+          "prompt": "In a Linux shell, show the first 20 lines of server.log.",
+          "answers": [
+            "head -n 20 server.log"
+          ],
+          "explanation": "head -n chooses line count.",
+          "command": "head",
+          "tested_flags": [
+            "-n"
+          ]
+        },
+        {
+          "id": "base-linux-tail-follow",
+          "prompt": "In a Linux shell, follow new log lines in app.log as they are written.",
+          "answers": [
+            "tail -f app.log"
+          ],
+          "explanation": "tail -f follows appended lines.",
+          "command": "tail",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "base-linux-grep-line-numbers",
+          "prompt": "In a Linux shell, search recursively for TODO and show line numbers under current directory.",
+          "answers": [
+            "grep -R -n TODO .",
+            "grep -n -R TODO ."
+          ],
+          "explanation": "-R recursive and -n line numbers.",
+          "command": "grep",
+          "tested_flags": [
+            "-R",
+            "-n"
+          ]
+        },
+        {
+          "id": "base-linux-grep-ignore-case",
+          "prompt": "In a Linux shell, search for the word error in app.log, case-insensitive.",
+          "answers": [
+            "grep -i error app.log"
+          ],
+          "explanation": "-i ignores case differences.",
+          "command": "grep",
+          "tested_flags": [
+            "-i"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "permissions-and-processes",
+      "title": "Permissions and process basics",
+      "order": 3,
+      "cards": [
+        {
+          "id": "base-linux-chmod-exec-user",
+          "prompt": "In a Linux shell, add execute permission for the file owner on deploy.sh.",
+          "answers": [
+            "chmod u+x deploy.sh"
+          ],
+          "explanation": "u+x adds execute to user/owner.",
+          "command": "chmod",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-chmod-644",
+          "prompt": "In a Linux shell, set permissions of .env.example to rw-r--r-- numerically.",
+          "answers": [
+            "chmod 644 .env.example"
+          ],
+          "explanation": "644 means owner read/write, group/others read-only.",
+          "command": "chmod",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-ps-aux",
+          "prompt": "In a Linux shell, show all running processes with full details.",
+          "answers": [
+            "ps aux"
+          ],
+          "explanation": "ps aux is a common full process listing.",
+          "command": "ps",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-kill-term",
+          "prompt": "In a Linux shell, send SIGTERM to process 4321.",
+          "answers": [
+            "kill 4321"
+          ],
+          "explanation": "Default signal is TERM (15).",
+          "command": "kill",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-kill-force",
+          "prompt": "In a Linux shell, force-kill process 4321 with SIGKILL.",
+          "answers": [
+            "kill -9 4321"
+          ],
+          "explanation": "-9 sends SIGKILL.",
+          "command": "kill",
+          "tested_flags": [
+            "-9"
+          ]
+        },
+        {
+          "id": "base-linux-df-human",
+          "prompt": "In a Linux shell, show filesystem disk usage in human-readable format.",
+          "answers": [
+            "df -h"
+          ],
+          "explanation": "df -h is common for disk capacity checks.",
+          "command": "df",
+          "tested_flags": [
+            "-h"
+          ]
+        },
+        {
+          "id": "base-linux-du-summary-human",
+          "prompt": "In a Linux shell, show total size of node_modules in human-readable form.",
+          "answers": [
+            "du -sh node_modules",
+            "du -hs node_modules"
+          ],
+          "explanation": "-s summary, -h human-readable.",
+          "command": "du",
+          "tested_flags": [
+            "-h",
+            "-s"
+          ]
+        },
+        {
+          "id": "base-linux-wc-lines",
+          "prompt": "In a Linux shell, count lines in requirements.txt.",
+          "answers": [
+            "wc -l requirements.txt"
+          ],
+          "explanation": "wc -l returns line count.",
+          "command": "wc",
+          "tested_flags": [
+            "-l"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "system-and-archives",
+      "title": "System info and archives",
+      "order": 4,
+      "cards": [
+        {
+          "id": "base-linux-whoami",
+          "prompt": "In a Linux shell, print the current username.",
+          "answers": [
+            "whoami"
+          ],
+          "explanation": "Shows effective user identity.",
+          "command": "whoami",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-which-git",
+          "prompt": "In a Linux shell, show path to git executable.",
+          "answers": [
+            "which git"
+          ],
+          "explanation": "Resolves command path from PATH.",
+          "command": "which",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-man-grep",
+          "prompt": "In a Linux shell, open manual page for grep.",
+          "answers": [
+            "man grep"
+          ],
+          "explanation": "Displays command documentation.",
+          "command": "man",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-less-log",
+          "prompt": "In a Linux shell, open app.log in pager mode.",
+          "answers": [
+            "less app.log"
+          ],
+          "explanation": "less supports scrolling/search in files.",
+          "command": "less",
+          "tested_flags": []
+        },
+        {
+          "id": "base-linux-tar-create-gzip",
+          "prompt": "In a Linux shell, create gzip-compressed archive backup.tar.gz from directory backup/.",
+          "answers": [
+            "tar -czf backup.tar.gz backup/"
+          ],
+          "explanation": "-c create, -z gzip, -f filename.",
+          "command": "tar",
+          "tested_flags": [
+            "-c",
+            "-z",
+            "-f"
+          ]
+        },
+        {
+          "id": "base-linux-tar-extract-gzip",
+          "prompt": "In a Linux shell, extract backup.tar.gz into current directory.",
+          "answers": [
+            "tar -xzf backup.tar.gz"
+          ],
+          "explanation": "-x extract, -z gzip, -f filename.",
+          "command": "tar",
+          "tested_flags": [
+            "-x",
+            "-z",
+            "-f"
+          ]
+        },
+        {
+          "id": "base-linux-ln-symlink",
+          "prompt": "In a Linux shell, create symbolic link current -> releases/v2.",
+          "answers": [
+            "ln -s releases/v2 current"
+          ],
+          "explanation": "-s creates symbolic link.",
+          "command": "ln",
+          "tested_flags": [
+            "-s"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

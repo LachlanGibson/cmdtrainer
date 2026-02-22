@@ -1,0 +1,134 @@
+{
+  "id": "docker-image",
+  "title": "Docker Image Management",
+  "description": "Manage Docker images, tags, and image cleanup.",
+  "prerequisites": [
+    "docker"
+  ],
+  "lessons": [
+    {
+      "id": "image-list-and-history",
+      "title": "List and inspect image metadata",
+      "order": 1,
+      "cards": [
+        {
+          "id": "docker-image-ls",
+          "prompt": "Using Docker image commands, list local images using docker image command.",
+          "answers": [
+            "docker image ls"
+          ],
+          "explanation": "Equivalent to docker images.",
+          "command": "docker image",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-image-ls-dangling",
+          "prompt": "Using Docker image commands, list only dangling images.",
+          "answers": [
+            "docker image ls -f dangling=true",
+            "docker image ls --filter dangling=true"
+          ],
+          "explanation": "Filter helps locate cleanup candidates.",
+          "command": "docker image",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-image-history",
+          "prompt": "Using Docker image commands, show image layer history for nginx:latest.",
+          "answers": [
+            "docker image history nginx:latest"
+          ],
+          "explanation": "Shows layer commands and sizes.",
+          "command": "docker image history",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "image-tag-pull-push",
+      "title": "Tag, pull, and push",
+      "order": 2,
+      "cards": [
+        {
+          "id": "docker-image-tag",
+          "prompt": "Using Docker image commands, tag image myapp:dev as myapp:staging.",
+          "answers": [
+            "docker image tag myapp:dev myapp:staging"
+          ],
+          "explanation": "Tag creates another reference to the same image ID.",
+          "command": "docker image tag",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-image-pull-platform",
+          "prompt": "Using Docker image commands, pull alpine:latest for linux/amd64 platform.",
+          "answers": [
+            "docker image pull --platform linux/amd64 alpine:latest"
+          ],
+          "explanation": "Useful on mixed-architecture development machines.",
+          "command": "docker image pull",
+          "tested_flags": [
+            "--platform"
+          ]
+        },
+        {
+          "id": "docker-image-push",
+          "prompt": "Using Docker image commands, push image registry.example.com/team/api:1.2.0.",
+          "answers": [
+            "docker image push registry.example.com/team/api:1.2.0"
+          ],
+          "explanation": "Pushes tagged image layers to registry.",
+          "command": "docker image push",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "image-cleanup",
+      "title": "Remove and prune images",
+      "order": 3,
+      "cards": [
+        {
+          "id": "docker-image-rm",
+          "prompt": "Using Docker image commands, remove local image myapp:old.",
+          "answers": [
+            "docker image rm myapp:old"
+          ],
+          "explanation": "Removes image tag and image if unreferenced.",
+          "command": "docker image rm",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-image-rm-force",
+          "prompt": "Using Docker image commands, force remove image myapp:old.",
+          "answers": [
+            "docker image rm -f myapp:old",
+            "docker image rm --force myapp:old"
+          ],
+          "explanation": "Force may remove image used by stopped containers.",
+          "command": "docker image rm",
+          "tested_flags": [
+            "-f"
+          ]
+        },
+        {
+          "id": "docker-image-prune-all-force",
+          "prompt": "Using Docker image commands, remove all unused images without prompt.",
+          "answers": [
+            "docker image prune -a -f",
+            "docker image prune -f -a"
+          ],
+          "explanation": "-a includes all unused images, -f skips confirmation.",
+          "command": "docker image",
+          "tested_flags": [
+            "-a",
+            "-f"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

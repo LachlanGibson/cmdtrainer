@@ -1,0 +1,108 @@
+{
+  "id": "docker-context",
+  "title": "Docker Context Management",
+  "description": "Manage Docker contexts for local and remote engines.",
+  "prerequisites": [
+    "docker",
+    "ssh"
+  ],
+  "lessons": [
+    {
+      "id": "context-basics",
+      "title": "List and inspect contexts",
+      "order": 1,
+      "cards": [
+        {
+          "id": "docker-context-ls",
+          "prompt": "Using Docker context commands, list Docker contexts.",
+          "answers": [
+            "docker context ls"
+          ],
+          "explanation": "Shows available contexts and current active context.",
+          "command": "docker context",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-context-show",
+          "prompt": "Using Docker context commands, show the currently active Docker context.",
+          "answers": [
+            "docker context show"
+          ],
+          "explanation": "Useful before running cluster-sensitive commands.",
+          "command": "docker context show",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-context-inspect",
+          "prompt": "Using Docker context commands, inspect details of context remote-prod.",
+          "answers": [
+            "docker context inspect remote-prod"
+          ],
+          "explanation": "Inspect includes endpoint and TLS settings.",
+          "command": "docker context inspect",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "context-lifecycle",
+      "title": "Create and switch contexts",
+      "order": 2,
+      "cards": [
+        {
+          "id": "docker-context-create-ssh",
+          "prompt": "Using Docker context commands, create context remote-prod using SSH endpoint ssh://ubuntu@prod-host.",
+          "answers": [
+            "docker context create remote-prod --docker \"host=ssh://ubuntu@prod-host\""
+          ],
+          "explanation": "Creates context pointing at remote engine via SSH.",
+          "command": "docker context create",
+          "tested_flags": [
+            "--docker"
+          ]
+        },
+        {
+          "id": "docker-context-use",
+          "prompt": "Using Docker context commands, switch to Docker context remote-prod.",
+          "answers": [
+            "docker context use remote-prod"
+          ],
+          "explanation": "Subsequent docker commands target this context.",
+          "command": "docker context use",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-context-export",
+          "prompt": "Using Docker context commands, export context remote-prod to file remote-prod.dockercontext.",
+          "answers": [
+            "docker context export remote-prod remote-prod.dockercontext"
+          ],
+          "explanation": "Export context for transfer/backups.",
+          "command": "docker context export",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-context-import",
+          "prompt": "Using Docker context commands, import context remote-prod from file remote-prod.dockercontext.",
+          "answers": [
+            "docker context import remote-prod remote-prod.dockercontext"
+          ],
+          "explanation": "Imports context file on another machine.",
+          "command": "docker context import",
+          "tested_flags": []
+        },
+        {
+          "id": "docker-context-rm",
+          "prompt": "Using Docker context commands, remove context remote-prod.",
+          "answers": [
+            "docker context rm remote-prod"
+          ],
+          "explanation": "Cannot remove currently active context.",
+          "command": "docker context rm",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

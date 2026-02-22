@@ -1,0 +1,218 @@
+{
+  "id": "ssh",
+  "title": "SSH",
+  "description": "Core SSH command drills.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "ssh-connect-and-config",
+      "title": "Connect and inspect",
+      "order": 1,
+      "cards": [
+        {
+          "id": "ssh-user-host",
+          "prompt": "Using SSH, connect to host example.com as user ubuntu.",
+          "answers": [
+            "ssh ubuntu@example.com"
+          ],
+          "explanation": "Standard user@host SSH form.",
+          "command": "ssh",
+          "tested_flags": []
+        },
+        {
+          "id": "ssh-port",
+          "prompt": "Using SSH, connect to example.com as ubuntu on port 2222.",
+          "answers": [
+            "ssh -p 2222 ubuntu@example.com"
+          ],
+          "explanation": "-p selects non-default SSH port.",
+          "command": "ssh",
+          "tested_flags": [
+            "-p"
+          ]
+        },
+        {
+          "id": "ssh-identity-file",
+          "prompt": "Using SSH, connect to ubuntu@example.com using private key ~/.ssh/id_ed25519.",
+          "answers": [
+            "ssh -i ~/.ssh/id_ed25519 ubuntu@example.com"
+          ],
+          "explanation": "-i specifies a private key file.",
+          "command": "ssh",
+          "tested_flags": [
+            "-i"
+          ]
+        },
+        {
+          "id": "ssh-verbose",
+          "prompt": "Using SSH, connect to ubuntu@example.com with verbose debug output.",
+          "answers": [
+            "ssh -v ubuntu@example.com"
+          ],
+          "explanation": "-v helps debug auth and network issues.",
+          "command": "ssh",
+          "tested_flags": [
+            "-v"
+          ]
+        },
+        {
+          "id": "ssh-config-test",
+          "prompt": "Using SSH, print expanded SSH config for host prod-server.",
+          "answers": [
+            "ssh -G prod-server"
+          ],
+          "explanation": "-G shows fully expanded host config.",
+          "command": "ssh",
+          "tested_flags": [
+            "-G"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ssh-keys-copy",
+      "title": "Keys and file transfer",
+      "order": 2,
+      "cards": [
+        {
+          "id": "ssh-keygen-ed25519",
+          "prompt": "Using SSH, generate a new ed25519 SSH key with comment dev@laptop.",
+          "answers": [
+            "ssh-keygen -t ed25519 -C \"dev@laptop\""
+          ],
+          "explanation": "ed25519 is a modern default key type.",
+          "command": "ssh-keygen",
+          "tested_flags": [
+            "-C",
+            "-t"
+          ]
+        },
+        {
+          "id": "ssh-add-key",
+          "prompt": "Using SSH, add ~/.ssh/id_ed25519 to the SSH agent.",
+          "answers": [
+            "ssh-add ~/.ssh/id_ed25519"
+          ],
+          "explanation": "ssh-add loads key for agent-based auth.",
+          "command": "ssh-add",
+          "tested_flags": []
+        },
+        {
+          "id": "ssh-copy-id",
+          "prompt": "Using SSH, install your public key on ubuntu@example.com.",
+          "answers": [
+            "ssh-copy-id ubuntu@example.com"
+          ],
+          "explanation": "Copies public key to remote authorized_keys.",
+          "command": "ssh-copy-id",
+          "tested_flags": []
+        },
+        {
+          "id": "ssh-copy-id-identity-file",
+          "prompt": "Using SSH, install public key ~/.ssh/id_ed25519.pub on ubuntu@example.com.",
+          "answers": [
+            "ssh-copy-id -i ~/.ssh/id_ed25519.pub ubuntu@example.com"
+          ],
+          "explanation": "-i selects the public key file to copy.",
+          "command": "ssh-copy-id",
+          "tested_flags": [
+            "-i"
+          ]
+        },
+        {
+          "id": "scp-copy-local-to-remote",
+          "prompt": "Using SSH, copy local file app.tar.gz to /tmp on ubuntu@example.com.",
+          "answers": [
+            "scp app.tar.gz ubuntu@example.com:/tmp/"
+          ],
+          "explanation": "scp local_file user@host:remote_path",
+          "command": "scp",
+          "tested_flags": []
+        },
+        {
+          "id": "scp-recursive",
+          "prompt": "Using SSH, copy local directory dist to /var/www on ubuntu@example.com recursively.",
+          "answers": [
+            "scp -r dist ubuntu@example.com:/var/www/"
+          ],
+          "explanation": "-r is required for directory transfers.",
+          "command": "scp",
+          "tested_flags": [
+            "-r"
+          ]
+        },
+        {
+          "id": "ssh-tunnel-local-forward",
+          "prompt": "Using SSH, forward local port 5432 to remote localhost:5432 on db.example.com as ubuntu.",
+          "answers": [
+            "ssh -L 5432:localhost:5432 ubuntu@db.example.com"
+          ],
+          "explanation": "-L creates local port forwarding tunnel.",
+          "command": "ssh",
+          "tested_flags": [
+            "-L"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ssh-advanced",
+      "title": "Advanced SSH usage",
+      "order": 3,
+      "cards": [
+        {
+          "id": "ssh-jump-host",
+          "prompt": "Using SSH, connect to app.internal as ubuntu via bastion.example.com jump host.",
+          "answers": [
+            "ssh -J bastion.example.com ubuntu@app.internal"
+          ],
+          "explanation": "-J configures ProxyJump via bastion host.",
+          "command": "ssh",
+          "tested_flags": [
+            "-J"
+          ]
+        },
+        {
+          "id": "ssh-no-remote-command",
+          "prompt": "Using SSH, open only a local forward tunnel to db.example.com without running remote command.",
+          "answers": [
+            "ssh -N -L 5432:localhost:5432 ubuntu@db.example.com"
+          ],
+          "explanation": "-N disables remote command execution for tunnel-only session.",
+          "command": "ssh",
+          "tested_flags": [
+            "-N",
+            "-L"
+          ]
+        },
+        {
+          "id": "scp-port",
+          "prompt": "Using SSH, copy app.tar.gz to /tmp on ubuntu@example.com using SSH port 2222.",
+          "answers": [
+            "scp -P 2222 app.tar.gz ubuntu@example.com:/tmp/"
+          ],
+          "explanation": "scp uses uppercase -P for port.",
+          "command": "scp",
+          "tested_flags": [
+            "-P"
+          ]
+        },
+        {
+          "id": "ssh-agent-start",
+          "prompt": "Using SSH, start ssh-agent and print shell export commands.",
+          "answers": [
+            "ssh-agent -s"
+          ],
+          "explanation": "-s prints shell commands for environment setup.",
+          "command": "ssh-agent",
+          "tested_flags": [
+            "-s"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 2
+}

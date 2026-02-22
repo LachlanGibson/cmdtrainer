@@ -1,0 +1,170 @@
+{
+  "id": "network-basics",
+  "title": "Network Basics",
+  "description": "Core Linux networking inspection, connectivity, and DNS lookup commands.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "interfaces-and-sockets",
+      "title": "Interfaces, routes, and sockets",
+      "order": 1,
+      "cards": [
+        {
+          "id": "network-basics-ip-addr-show",
+          "prompt": "Using Linux networking tools, show all network interfaces and addresses.",
+          "answers": [
+            "ip addr show"
+          ],
+          "explanation": "ip addr show displays interface status and assigned addresses.",
+          "command": "ip addr",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-ip-brief",
+          "prompt": "Using Linux networking tools, show interfaces in brief format.",
+          "answers": [
+            "ip -br addr"
+          ],
+          "explanation": "-br prints concise output for quick checks.",
+          "command": "ip addr",
+          "tested_flags": [
+            "-br"
+          ]
+        },
+        {
+          "id": "network-basics-ip-route",
+          "prompt": "Using Linux networking tools, print the current routing table.",
+          "answers": [
+            "ip route"
+          ],
+          "explanation": "ip route shows default route and subnet routes.",
+          "command": "ip route",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-ip-route-get",
+          "prompt": "Using Linux networking tools, show which route would be used to reach 8.8.8.8.",
+          "answers": [
+            "ip route get 8.8.8.8"
+          ],
+          "explanation": "route get reveals selected interface and source address.",
+          "command": "ip route",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-ss-listen",
+          "prompt": "Using Linux networking tools, list listening TCP and UDP ports numerically.",
+          "answers": [
+            "ss -tuln",
+            "ss -lntu",
+            "ss -lnut",
+            "ss -ntul"
+          ],
+          "explanation": "-t TCP, -u UDP, -l listening, -n numeric output.",
+          "command": "ss",
+          "tested_flags": [
+            "-l",
+            "-n",
+            "-t",
+            "-u"
+          ]
+        },
+        {
+          "id": "network-basics-ss-processes",
+          "prompt": "Using Linux networking tools, show all TCP sockets with process info.",
+          "answers": [
+            "ss -tap",
+            "ss -atp",
+            "ss -pta",
+            "ss -pat"
+          ],
+          "explanation": "-a all sockets, -t TCP only, -p includes process info.",
+          "command": "ss",
+          "tested_flags": [
+            "-a",
+            "-p",
+            "-t"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "connectivity-and-dns",
+      "title": "Connectivity and DNS",
+      "order": 2,
+      "cards": [
+        {
+          "id": "network-basics-ping-count",
+          "prompt": "Using Linux networking tools, send exactly 4 ICMP pings to example.com.",
+          "answers": [
+            "ping -c 4 example.com"
+          ],
+          "explanation": "-c controls how many packets to send.",
+          "command": "ping",
+          "tested_flags": [
+            "-c"
+          ]
+        },
+        {
+          "id": "network-basics-ping-interval",
+          "prompt": "Using Linux networking tools, ping 1.1.1.1 every 0.2 seconds for 5 packets.",
+          "answers": [
+            "ping -i 0.2 -c 5 1.1.1.1",
+            "ping -c 5 -i 0.2 1.1.1.1"
+          ],
+          "explanation": "-i sets interval and -c sets total packets.",
+          "command": "ping",
+          "tested_flags": [
+            "-c",
+            "-i"
+          ]
+        },
+        {
+          "id": "network-basics-traceroute",
+          "prompt": "Using Linux networking tools, trace the network path to example.com.",
+          "answers": [
+            "traceroute example.com"
+          ],
+          "explanation": "traceroute shows packet hops to destination.",
+          "command": "traceroute",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-dig-short",
+          "prompt": "Using Linux networking tools, query A records for example.com with short output.",
+          "answers": [
+            "dig example.com +short"
+          ],
+          "explanation": "+short prints compact DNS answers.",
+          "command": "dig",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-nslookup",
+          "prompt": "Using Linux networking tools, resolve DNS for api.example.com.",
+          "answers": [
+            "nslookup api.example.com"
+          ],
+          "explanation": "nslookup performs a direct DNS query.",
+          "command": "nslookup",
+          "tested_flags": []
+        },
+        {
+          "id": "network-basics-host-mx",
+          "prompt": "Using Linux networking tools, query MX records for example.com.",
+          "answers": [
+            "host -t MX example.com"
+          ],
+          "explanation": "-t selects DNS record type to query.",
+          "command": "host",
+          "tested_flags": [
+            "-t"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

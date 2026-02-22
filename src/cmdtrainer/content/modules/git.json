@@ -1,0 +1,465 @@
+{
+  "id": "git",
+  "title": "Git",
+  "description": "Core Git command drills.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "git-basics",
+      "title": "Status and staging",
+      "order": 1,
+      "cards": [
+        {
+          "id": "git-status",
+          "prompt": "Using git, show repository status.",
+          "answers": [
+            "git status"
+          ],
+          "explanation": "Shows staged, unstaged, and untracked changes.",
+          "command": "git status",
+          "tested_flags": []
+        },
+        {
+          "id": "git-status-short",
+          "prompt": "Using git, show concise repository status.",
+          "answers": [
+            "git status -s",
+            "git status --short"
+          ],
+          "explanation": "Short format is easier to scan quickly.",
+          "command": "git status",
+          "tested_flags": [
+            "--short",
+            "-s"
+          ]
+        },
+        {
+          "id": "git-add-all",
+          "prompt": "Using git, stage all changes in the current repository.",
+          "answers": [
+            "git add ."
+          ],
+          "explanation": "Stages all tracked/untracked changes under cwd.",
+          "command": "git add",
+          "tested_flags": []
+        },
+        {
+          "id": "git-add-patch",
+          "prompt": "Using git, interactively stage selected hunks from modified files.",
+          "answers": [
+            "git add -p"
+          ],
+          "explanation": "-p lets you pick chunks to stage.",
+          "command": "git add",
+          "tested_flags": [
+            "-p"
+          ]
+        },
+        {
+          "id": "git-restore-staged",
+          "prompt": "Using git, unstage file src/app.py but keep working tree edits.",
+          "answers": [
+            "git restore --staged src/app.py"
+          ],
+          "explanation": "Removes file from index only.",
+          "command": "git restore",
+          "tested_flags": [
+            "--staged"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "git-commit-history",
+      "title": "Committing and history",
+      "order": 2,
+      "cards": [
+        {
+          "id": "git-commit-message",
+          "prompt": "Using git, create a commit with message fix login bug.",
+          "answers": [
+            "git commit -m \"fix login bug\""
+          ],
+          "explanation": "-m sets commit message inline.",
+          "command": "git commit",
+          "tested_flags": [
+            "-m"
+          ]
+        },
+        {
+          "id": "git-commit-amend",
+          "prompt": "Using git, amend the last commit message to fix typo.",
+          "answers": [
+            "git commit --amend -m \"fix typo\""
+          ],
+          "explanation": "--amend replaces the latest commit.",
+          "command": "git commit",
+          "tested_flags": [
+            "--amend",
+            "-m"
+          ]
+        },
+        {
+          "id": "git-log-oneline-graph",
+          "prompt": "Using git, show compact commit history graph for all branches.",
+          "answers": [
+            "git log --oneline --graph --all"
+          ],
+          "explanation": "Common readable history view.",
+          "command": "git log",
+          "tested_flags": [
+            "--all",
+            "--graph",
+            "--oneline"
+          ]
+        },
+        {
+          "id": "git-show-head",
+          "prompt": "Using git, show details of the latest commit.",
+          "answers": [
+            "git show HEAD"
+          ],
+          "explanation": "Displays commit metadata and diff.",
+          "command": "git show",
+          "tested_flags": []
+        },
+        {
+          "id": "git-diff-staged",
+          "prompt": "Using git, show diff of staged changes only.",
+          "answers": [
+            "git diff --staged",
+            "git diff --cached"
+          ],
+          "explanation": "Shows index vs HEAD changes.",
+          "command": "git diff",
+          "tested_flags": [
+            "--cached",
+            "--staged"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "git-branches-remote",
+      "title": "Branches and remotes",
+      "order": 3,
+      "cards": [
+        {
+          "id": "git-branch-create-switch",
+          "prompt": "Using git, create and switch to branch feature/auth.",
+          "answers": [
+            "git switch -c feature/auth",
+            "git checkout -b feature/auth"
+          ],
+          "explanation": "switch -c is modern branch creation+switch.",
+          "command": "git switch",
+          "tested_flags": [
+            "-b",
+            "-c"
+          ]
+        },
+        {
+          "id": "git-switch-main",
+          "prompt": "Using git, switch to branch main.",
+          "answers": [
+            "git switch main",
+            "git checkout main"
+          ],
+          "explanation": "Both forms are common in existing repos.",
+          "command": "git switch",
+          "tested_flags": []
+        },
+        {
+          "id": "git-branch-delete",
+          "prompt": "Using git, delete local branch old-feature.",
+          "answers": [
+            "git branch -d old-feature"
+          ],
+          "explanation": "-d deletes merged branch safely.",
+          "command": "git branch",
+          "tested_flags": [
+            "-d"
+          ]
+        },
+        {
+          "id": "git-fetch-all-prune",
+          "prompt": "Using git, fetch updates from all remotes and prune deleted remote refs.",
+          "answers": [
+            "git fetch --all --prune"
+          ],
+          "explanation": "Keeps remote-tracking branches clean.",
+          "command": "git fetch",
+          "tested_flags": [
+            "--all",
+            "--prune"
+          ]
+        },
+        {
+          "id": "git-pull-rebase",
+          "prompt": "Using git, pull latest changes from origin/main using rebase.",
+          "answers": [
+            "git pull --rebase origin main"
+          ],
+          "explanation": "Rebase keeps a linear local history.",
+          "command": "git pull",
+          "tested_flags": [
+            "--rebase"
+          ]
+        },
+        {
+          "id": "git-push-set-upstream",
+          "prompt": "Using git, push current branch to origin and set upstream tracking.",
+          "answers": [
+            "git push -u origin HEAD"
+          ],
+          "explanation": "-u sets default push/pull remote branch.",
+          "command": "git push",
+          "tested_flags": [
+            "-u"
+          ]
+        },
+        {
+          "id": "git-remote-verbose",
+          "prompt": "Using git, list remotes with URLs.",
+          "answers": [
+            "git remote -v"
+          ],
+          "explanation": "Useful to verify fetch/push URLs.",
+          "command": "git remote",
+          "tested_flags": [
+            "-v"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "git-rewrite-history",
+      "title": "Rebase, merge, and rewrite",
+      "order": 4,
+      "cards": [
+        {
+          "id": "git-rebase-main",
+          "prompt": "Using git, rebase current branch on top of origin/main.",
+          "answers": [
+            "git rebase origin/main"
+          ],
+          "explanation": "Replays local commits onto new base.",
+          "command": "git rebase",
+          "tested_flags": []
+        },
+        {
+          "id": "git-rebase-interactive-last5",
+          "prompt": "Using git, interactively rebase the last 5 commits.",
+          "answers": [
+            "git rebase -i HEAD~5"
+          ],
+          "explanation": "-i opens interactive todo list for reorder/squash/edit.",
+          "command": "git rebase",
+          "tested_flags": [
+            "-i"
+          ]
+        },
+        {
+          "id": "git-rebase-continue",
+          "prompt": "Using git, continue an in-progress rebase after resolving conflicts.",
+          "answers": [
+            "git rebase --continue"
+          ],
+          "explanation": "Use after staging conflict resolutions.",
+          "command": "git rebase",
+          "tested_flags": [
+            "--continue"
+          ]
+        },
+        {
+          "id": "git-rebase-abort",
+          "prompt": "Using git, abort the current rebase and restore previous branch state.",
+          "answers": [
+            "git rebase --abort"
+          ],
+          "explanation": "Cancels rebase and resets to pre-rebase state.",
+          "command": "git rebase",
+          "tested_flags": [
+            "--abort"
+          ]
+        },
+        {
+          "id": "git-merge-no-ff",
+          "prompt": "Using git, merge branch feature/auth into current branch with an explicit merge commit.",
+          "answers": [
+            "git merge --no-ff feature/auth"
+          ],
+          "explanation": "--no-ff keeps a merge commit even when fast-forward is possible.",
+          "command": "git merge",
+          "tested_flags": [
+            "--no-ff"
+          ]
+        },
+        {
+          "id": "git-revert-commit",
+          "prompt": "Using git, create a revert commit for commit a1b2c3d.",
+          "answers": [
+            "git revert a1b2c3d"
+          ],
+          "explanation": "Safely undoes changes by creating a new commit.",
+          "command": "git revert",
+          "tested_flags": []
+        },
+        {
+          "id": "git-reset-soft",
+          "prompt": "Using git, move HEAD back one commit but keep all changes staged.",
+          "answers": [
+            "git reset --soft HEAD~1"
+          ],
+          "explanation": "--soft moves HEAD only; index/worktree stay.",
+          "command": "git reset",
+          "tested_flags": [
+            "--soft"
+          ]
+        },
+        {
+          "id": "git-reset-hard",
+          "prompt": "Using git, reset current branch and working tree to origin/main.",
+          "answers": [
+            "git reset --hard origin/main"
+          ],
+          "explanation": "--hard resets HEAD, index, and working tree.",
+          "command": "git reset",
+          "tested_flags": [
+            "--hard"
+          ]
+        },
+        {
+          "id": "git-cherry-pick",
+          "prompt": "Using git, apply commit d34db33f onto current branch.",
+          "answers": [
+            "git cherry-pick d34db33f"
+          ],
+          "explanation": "Copies a specific commit to current branch.",
+          "command": "git cherry-pick",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "git-maintenance",
+      "title": "Stash, clean, tags, and recovery",
+      "order": 5,
+      "cards": [
+        {
+          "id": "git-stash-push-message",
+          "prompt": "Using git, stash current tracked changes with message wip auth refactor.",
+          "answers": [
+            "git stash push -m \"wip auth refactor\""
+          ],
+          "explanation": "Named stashes are easier to identify later.",
+          "command": "git stash",
+          "tested_flags": [
+            "-m"
+          ]
+        },
+        {
+          "id": "git-stash-list",
+          "prompt": "Using git, list saved stashes.",
+          "answers": [
+            "git stash list"
+          ],
+          "explanation": "Shows stash entries in order.",
+          "command": "git stash",
+          "tested_flags": []
+        },
+        {
+          "id": "git-stash-pop",
+          "prompt": "Using git, apply and drop the most recent stash.",
+          "answers": [
+            "git stash pop"
+          ],
+          "explanation": "Applies top stash and removes it from stash list.",
+          "command": "git stash",
+          "tested_flags": []
+        },
+        {
+          "id": "git-clean-dry-run",
+          "prompt": "Using git, preview untracked files/directories that would be removed.",
+          "answers": [
+            "git clean -fdn",
+            "git clean -fnd"
+          ],
+          "explanation": "-n dry run, -f force, -d include directories.",
+          "command": "git clean",
+          "tested_flags": [
+            "-f",
+            "-d",
+            "-n"
+          ]
+        },
+        {
+          "id": "git-clean-force",
+          "prompt": "Using git, remove untracked files and directories.",
+          "answers": [
+            "git clean -fd",
+            "git clean -df"
+          ],
+          "explanation": "Dangerous cleanup; dry-run first is recommended.",
+          "command": "git clean",
+          "tested_flags": [
+            "-f",
+            "-d"
+          ]
+        },
+        {
+          "id": "git-tag-annotated",
+          "prompt": "Using git, create annotated tag v1.2.0 with message release 1.2.0.",
+          "answers": [
+            "git tag -a v1.2.0 -m \"release 1.2.0\""
+          ],
+          "explanation": "-a annotated tag with metadata and message.",
+          "command": "git tag",
+          "tested_flags": [
+            "-a",
+            "-m"
+          ]
+        },
+        {
+          "id": "git-tag-list",
+          "prompt": "Using git, list all tags.",
+          "answers": [
+            "git tag -l",
+            "git tag --list"
+          ],
+          "explanation": "Shows local tags.",
+          "command": "git tag",
+          "tested_flags": [
+            "-l"
+          ]
+        },
+        {
+          "id": "git-push-tags",
+          "prompt": "Using git, push all local tags to origin.",
+          "answers": [
+            "git push --tags origin",
+            "git push origin --tags"
+          ],
+          "explanation": "Pushes all tags, not only branch refs.",
+          "command": "git push",
+          "tested_flags": [
+            "--tags"
+          ]
+        },
+        {
+          "id": "git-reflog",
+          "prompt": "Using git, show reflog for HEAD references.",
+          "answers": [
+            "git reflog"
+          ],
+          "explanation": "Useful to recover commits/heads after resets.",
+          "command": "git reflog",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

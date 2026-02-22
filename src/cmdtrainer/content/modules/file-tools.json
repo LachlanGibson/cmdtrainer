@@ -1,0 +1,298 @@
+{
+  "id": "file-tools",
+  "title": "File Tools",
+  "description": "Text and file filtering utilities.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "find-and-grep",
+      "title": "Find and grep",
+      "order": 1,
+      "cards": [
+        {
+          "id": "find-by-name",
+          "prompt": "Using shell text/file tools, find files named config.json under current directory.",
+          "answers": [
+            "find . -name config.json"
+          ],
+          "explanation": "find path -name pattern",
+          "command": "find",
+          "tested_flags": [
+            "-name"
+          ]
+        },
+        {
+          "id": "find-by-type-file",
+          "prompt": "Using shell text/file tools, find only regular files ending with .py under current directory.",
+          "answers": [
+            "find . -type f -name \"*.py\"",
+            "find . -name \"*.py\" -type f"
+          ],
+          "explanation": "-type f limits to files.",
+          "command": "find",
+          "tested_flags": [
+            "-type",
+            "-name"
+          ]
+        },
+        {
+          "id": "find-by-type-dir",
+          "prompt": "Using shell text/file tools, find directories named .git under current directory.",
+          "answers": [
+            "find . -type d -name .git",
+            "find . -name .git -type d"
+          ],
+          "explanation": "-type d limits to directories.",
+          "command": "find",
+          "tested_flags": [
+            "-type",
+            "-name"
+          ]
+        },
+        {
+          "id": "find-size-plus",
+          "prompt": "Using shell text/file tools, find files larger than 100 MB under /var/log.",
+          "answers": [
+            "find /var/log -type f -size +100M",
+            "find /var/log -size +100M -type f"
+          ],
+          "explanation": "+100M means greater than 100 megabytes.",
+          "command": "find",
+          "tested_flags": [
+            "-type",
+            "-size"
+          ]
+        },
+        {
+          "id": "grep-ignore-case-recursive",
+          "prompt": "Using shell text/file tools, recursively search for timeout in current directory, ignoring case.",
+          "answers": [
+            "grep -R -i timeout .",
+            "grep -i -R timeout ."
+          ],
+          "explanation": "-R recursive, -i ignore case.",
+          "command": "grep",
+          "tested_flags": [
+            "-R",
+            "-i"
+          ]
+        },
+        {
+          "id": "grep-word-line-number",
+          "prompt": "Using shell text/file tools, find exact whole-word TODO with line numbers in main.py.",
+          "answers": [
+            "grep -n -w TODO main.py",
+            "grep -w -n TODO main.py"
+          ],
+          "explanation": "-w matches whole words, -n shows line numbers.",
+          "command": "grep",
+          "tested_flags": [
+            "-n",
+            "-w"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sort-uniq-cut-wc",
+      "title": "Sorting and extraction",
+      "order": 2,
+      "cards": [
+        {
+          "id": "sort-unique",
+          "prompt": "Using shell text/file tools, sort lines in users.txt and remove duplicates.",
+          "answers": [
+            "sort -u users.txt"
+          ],
+          "explanation": "-u deduplicates adjacent sorted lines.",
+          "command": "sort",
+          "tested_flags": [
+            "-u"
+          ]
+        },
+        {
+          "id": "uniq-count",
+          "prompt": "Using shell text/file tools, count duplicate adjacent lines in access.log.sorted.",
+          "answers": [
+            "uniq -c access.log.sorted"
+          ],
+          "explanation": "Input should usually be sorted first.",
+          "command": "uniq",
+          "tested_flags": [
+            "-c"
+          ]
+        },
+        {
+          "id": "cut-delimiter-field",
+          "prompt": "Using shell text/file tools, print the first column from data.csv using comma delimiter.",
+          "answers": [
+            "cut -d , -f 1 data.csv",
+            "cut -f 1 -d , data.csv"
+          ],
+          "explanation": "-d delimiter and -f field selection.",
+          "command": "cut",
+          "tested_flags": [
+            "-d",
+            "-f"
+          ]
+        },
+        {
+          "id": "wc-words",
+          "prompt": "Using shell text/file tools, count words in README.md.",
+          "answers": [
+            "wc -w README.md"
+          ],
+          "explanation": "wc -w returns word count.",
+          "command": "wc",
+          "tested_flags": [
+            "-w"
+          ]
+        },
+        {
+          "id": "xargs-rm",
+          "prompt": "Using shell text/file tools, delete files listed in files_to_delete.txt using xargs and rm.",
+          "answers": [
+            "cat files_to_delete.txt | xargs rm"
+          ],
+          "explanation": "xargs builds command args from stdin.",
+          "command": "cat",
+          "tested_flags": []
+        },
+        {
+          "id": "xargs-rm-stdin-file",
+          "prompt": "Using shell text/file tools, delete files listed in files_to_delete.txt using xargs and rm.",
+          "answers": [
+            "xargs rm < files_to_delete.txt"
+          ],
+          "explanation": "xargs builds command args from stdin.",
+          "command": "xargs",
+          "tested_flags": []
+        },
+        {
+          "id": "sort-numeric-reverse",
+          "prompt": "Using shell text/file tools, sort lines in scores.txt numerically in descending order.",
+          "answers": [
+            "sort -nr scores.txt",
+            "sort -rn scores.txt"
+          ],
+          "explanation": "-n numeric, -r reverse order.",
+          "command": "sort",
+          "tested_flags": [
+            "-n",
+            "-r"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sed-awk-jq",
+      "title": "Transformations",
+      "order": 3,
+      "cards": [
+        {
+          "id": "sed-replace-global",
+          "prompt": "Using shell text/file tools, replace all http:// with https:// in urls.txt and print result.",
+          "answers": [
+            "sed 's|http://|https://|g' urls.txt"
+          ],
+          "explanation": "s|old|new|g performs global substitution.",
+          "command": "sed",
+          "tested_flags": []
+        },
+        {
+          "id": "sed-inplace",
+          "prompt": "Using shell text/file tools, replace all tabs with four spaces in script.sh in place.",
+          "answers": [
+            "sed -i 's/\t/    /g' script.sh"
+          ],
+          "explanation": "-i edits file in place.",
+          "command": "sed",
+          "tested_flags": [
+            "-i"
+          ]
+        },
+        {
+          "id": "awk-print-column",
+          "prompt": "Using shell text/file tools, print the second whitespace-separated column from report.txt.",
+          "answers": [
+            "awk '{print $2}' report.txt"
+          ],
+          "explanation": "$2 is second field in awk.",
+          "command": "awk",
+          "tested_flags": []
+        },
+        {
+          "id": "awk-sum-column",
+          "prompt": "Using shell text/file tools, sum the first column in numbers.txt and print the total.",
+          "answers": [
+            "awk '{sum += $1} END {print sum}' numbers.txt"
+          ],
+          "explanation": "Accumulate in block, print in END.",
+          "command": "awk",
+          "tested_flags": []
+        },
+        {
+          "id": "jq-field",
+          "prompt": "Using shell text/file tools, print the .name field from data.json using jq.",
+          "answers": [
+            "jq .name data.json"
+          ],
+          "explanation": "jq reads JSON and evaluates expressions.",
+          "command": "jq",
+          "tested_flags": []
+        },
+        {
+          "id": "jq-compact",
+          "prompt": "Using shell text/file tools, print compact JSON output for data.json.",
+          "answers": [
+            "jq -c . data.json"
+          ],
+          "explanation": "-c outputs one-line compact JSON.",
+          "command": "jq",
+          "tested_flags": [
+            "-c"
+          ]
+        },
+        {
+          "id": "jq-raw-output",
+          "prompt": "Using shell text/file tools, print .version from package.json without JSON quotes.",
+          "answers": [
+            "jq -r .version package.json"
+          ],
+          "explanation": "-r outputs raw strings without quotes.",
+          "command": "jq",
+          "tested_flags": [
+            "-r"
+          ]
+        },
+        {
+          "id": "grep-invert-match",
+          "prompt": "Using shell text/file tools, show lines in app.log that do NOT contain DEBUG.",
+          "answers": [
+            "grep -v DEBUG app.log"
+          ],
+          "explanation": "-v inverts match selection.",
+          "command": "grep",
+          "tested_flags": [
+            "-v"
+          ]
+        },
+        {
+          "id": "awk-csv-second-field",
+          "prompt": "Using shell text/file tools, print second comma-separated field from users.csv.",
+          "answers": [
+            "awk -F, \"{print $2}\" users.csv"
+          ],
+          "explanation": "-F sets field separator.",
+          "command": "awk",
+          "tested_flags": [
+            "-F"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

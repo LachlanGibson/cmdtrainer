@@ -1,0 +1,207 @@
+{
+  "id": "docker-compose",
+  "title": "Docker Compose",
+  "description": "Core Compose command drills.",
+  "prerequisites": [
+    "docker"
+  ],
+  "lessons": [
+    {
+      "id": "compose-lifecycle",
+      "title": "Lifecycle commands",
+      "order": 1,
+      "cards": [
+        {
+          "id": "compose-up-detached",
+          "prompt": "Using Docker Compose, start services in detached mode from compose file.",
+          "answers": [
+            "docker compose up -d",
+            "docker compose up --detach"
+          ],
+          "explanation": "Starts all services in background.",
+          "command": "docker compose up",
+          "tested_flags": [
+            "--detach",
+            "-d"
+          ]
+        },
+        {
+          "id": "compose-up-build",
+          "prompt": "Using Docker Compose, start services and rebuild images first.",
+          "answers": [
+            "docker compose up --build"
+          ],
+          "explanation": "--build rebuilds images before startup.",
+          "command": "docker compose up",
+          "tested_flags": [
+            "--build"
+          ]
+        },
+        {
+          "id": "compose-stop",
+          "prompt": "Using Docker Compose, stop compose services without removing containers.",
+          "answers": [
+            "docker compose stop"
+          ],
+          "explanation": "Containers remain and can be restarted.",
+          "command": "docker compose stop",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-down-volumes",
+          "prompt": "Using Docker Compose, stop services and remove containers, networks, and named volumes.",
+          "answers": [
+            "docker compose down -v",
+            "docker compose down --volumes"
+          ],
+          "explanation": "-v removes named volumes too.",
+          "command": "docker compose down",
+          "tested_flags": [
+            "--volumes",
+            "-v"
+          ]
+        },
+        {
+          "id": "compose-restart-service",
+          "prompt": "Using Docker Compose, restart only the web service.",
+          "answers": [
+            "docker compose restart web"
+          ],
+          "explanation": "Restarts one service container set.",
+          "command": "docker compose restart",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-pull",
+          "prompt": "Using Docker Compose, pull latest images for compose services.",
+          "answers": [
+            "docker compose pull"
+          ],
+          "explanation": "Fetches newer images without starting services.",
+          "command": "docker compose pull",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-build",
+          "prompt": "Using Docker Compose, build or rebuild compose service images.",
+          "answers": [
+            "docker compose build"
+          ],
+          "explanation": "Builds images from compose build sections.",
+          "command": "docker compose build",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-down-orphans",
+          "prompt": "Using Docker Compose, stop services and remove orphaned containers too.",
+          "answers": [
+            "docker compose down --remove-orphans"
+          ],
+          "explanation": "Cleans containers not defined in current compose file.",
+          "command": "docker compose down",
+          "tested_flags": [
+            "--remove-orphans"
+          ]
+        },
+        {
+          "id": "compose-up-service",
+          "prompt": "Using Docker Compose, start only the web service in detached mode.",
+          "answers": [
+            "docker compose up -d web"
+          ],
+          "explanation": "Limits startup to one service and deps.",
+          "command": "docker compose up",
+          "tested_flags": [
+            "-d"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "compose-inspection-and-exec",
+      "title": "Inspect and run commands",
+      "order": 2,
+      "cards": [
+        {
+          "id": "compose-ps",
+          "prompt": "Using Docker Compose, list compose-managed containers and their status.",
+          "answers": [
+            "docker compose ps"
+          ],
+          "explanation": "Shows service, state, and ports.",
+          "command": "docker compose ps",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-logs-follow",
+          "prompt": "Using Docker Compose, stream logs for all compose services.",
+          "answers": [
+            "docker compose logs -f",
+            "docker compose logs --follow"
+          ],
+          "explanation": "-f follows log output.",
+          "command": "docker compose logs",
+          "tested_flags": [
+            "--follow",
+            "-f"
+          ]
+        },
+        {
+          "id": "compose-logs-service-tail",
+          "prompt": "Using Docker Compose, show last 50 log lines for service web.",
+          "answers": [
+            "docker compose logs --tail 50 web"
+          ],
+          "explanation": "Target a specific service with tail limit.",
+          "command": "docker compose logs",
+          "tested_flags": [
+            "--tail"
+          ]
+        },
+        {
+          "id": "compose-exec-shell",
+          "prompt": "Using Docker Compose, open bash shell in running web service container.",
+          "answers": [
+            "docker compose exec web bash"
+          ],
+          "explanation": "exec runs command in existing container.",
+          "command": "docker compose exec",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-run-once",
+          "prompt": "Using Docker Compose, run one-off command pytest in service app and remove container afterward.",
+          "answers": [
+            "docker compose run --rm app pytest"
+          ],
+          "explanation": "run creates temporary container for command.",
+          "command": "docker compose run",
+          "tested_flags": [
+            "--rm"
+          ]
+        },
+        {
+          "id": "compose-config",
+          "prompt": "Using Docker Compose, validate and print the merged compose configuration.",
+          "answers": [
+            "docker compose config"
+          ],
+          "explanation": "Useful to inspect final resolved config.",
+          "command": "docker compose config",
+          "tested_flags": []
+        },
+        {
+          "id": "compose-images",
+          "prompt": "Using Docker Compose, list images used by compose services.",
+          "answers": [
+            "docker compose images"
+          ],
+          "explanation": "Shows image mappings by service.",
+          "command": "docker compose images",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

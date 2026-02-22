@@ -1,0 +1,166 @@
+{
+  "id": "archive-tools",
+  "title": "Archive and Compression Tools",
+  "description": "Create and extract compressed artifacts commonly used in dev workflows.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "gzip-and-xz",
+      "title": "Gzip and xz basics",
+      "order": 1,
+      "cards": [
+        {
+          "id": "archive-tools-gzip-file",
+          "prompt": "Using archive tools, gzip compress app.log.",
+          "answers": [
+            "gzip app.log"
+          ],
+          "explanation": "gzip replaces file with app.log.gz by default.",
+          "command": "gzip",
+          "tested_flags": []
+        },
+        {
+          "id": "archive-tools-gzip-keep",
+          "prompt": "Using archive tools, gzip compress app.log but keep original file.",
+          "answers": [
+            "gzip -k app.log"
+          ],
+          "explanation": "-k keeps the original input file.",
+          "command": "gzip",
+          "tested_flags": [
+            "-k"
+          ]
+        },
+        {
+          "id": "archive-tools-gunzip",
+          "prompt": "Using archive tools, decompress build.log.gz.",
+          "answers": [
+            "gunzip build.log.gz"
+          ],
+          "explanation": "gunzip is shorthand for gzip -d.",
+          "command": "gunzip",
+          "tested_flags": []
+        },
+        {
+          "id": "archive-tools-xz-compress",
+          "prompt": "Using archive tools, xz compress backup.sql.",
+          "answers": [
+            "xz backup.sql"
+          ],
+          "explanation": "xz produces backup.sql.xz.",
+          "command": "xz",
+          "tested_flags": []
+        },
+        {
+          "id": "archive-tools-xz-decompress-keep",
+          "prompt": "Using archive tools, decompress backup.sql.xz and keep the .xz file.",
+          "answers": [
+            "xz -dk backup.sql.xz",
+            "xz -kd backup.sql.xz"
+          ],
+          "explanation": "-d decompresses and -k keeps compressed source.",
+          "command": "xz",
+          "tested_flags": [
+            "-d",
+            "-k"
+          ]
+        },
+        {
+          "id": "archive-tools-xz-threads",
+          "prompt": "Using archive tools, xz compress huge.dump using all CPU threads.",
+          "answers": [
+            "xz -T0 huge.dump"
+          ],
+          "explanation": "-T0 means auto-detect and use available threads.",
+          "command": "xz",
+          "tested_flags": [
+            "-T"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "zip-and-unzip",
+      "title": "zip and unzip workflows",
+      "order": 2,
+      "cards": [
+        {
+          "id": "archive-tools-zip-recursive",
+          "prompt": "Using archive tools, recursively zip directory dist into dist.zip.",
+          "answers": [
+            "zip -r dist.zip dist"
+          ],
+          "explanation": "-r is required to include directories recursively.",
+          "command": "zip",
+          "tested_flags": [
+            "-r"
+          ]
+        },
+        {
+          "id": "archive-tools-zip-encrypt",
+          "prompt": "Using archive tools, create password-protected archive secrets.zip from .env.",
+          "answers": [
+            "zip -e secrets.zip .env"
+          ],
+          "explanation": "-e enables password encryption prompt.",
+          "command": "zip",
+          "tested_flags": [
+            "-e"
+          ]
+        },
+        {
+          "id": "archive-tools-unzip-destination",
+          "prompt": "Using archive tools, extract release.zip into /tmp/release.",
+          "answers": [
+            "unzip release.zip -d /tmp/release"
+          ],
+          "explanation": "-d chooses extraction destination directory.",
+          "command": "unzip",
+          "tested_flags": [
+            "-d"
+          ]
+        },
+        {
+          "id": "archive-tools-unzip-list",
+          "prompt": "Using archive tools, list contents of release.zip without extracting.",
+          "answers": [
+            "unzip -l release.zip"
+          ],
+          "explanation": "-l lists archive entries only.",
+          "command": "unzip",
+          "tested_flags": [
+            "-l"
+          ]
+        },
+        {
+          "id": "archive-tools-unzip-overwrite",
+          "prompt": "Using archive tools, extract release.zip and overwrite files without prompts.",
+          "answers": [
+            "unzip -o release.zip"
+          ],
+          "explanation": "-o overwrites existing files automatically.",
+          "command": "unzip",
+          "tested_flags": [
+            "-o"
+          ]
+        },
+        {
+          "id": "archive-tools-zip-exclude",
+          "prompt": "Using archive tools, zip project directory into project.zip excluding node_modules.",
+          "answers": [
+            "zip -r project.zip project -x \"*/node_modules/*\""
+          ],
+          "explanation": "-x excludes matching paths from the archive.",
+          "command": "zip",
+          "tested_flags": [
+            "-r",
+            "-x"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}
