@@ -36,6 +36,7 @@ Card content fields include:
 - Incorrect answers reset streak and schedule near-term review.
 - Due cards are randomized each round.
 - Queue view is available via Admin and rendered with local due time.
+- Practice eligibility is limited to cards with at least one correct attempt.
 
 ## Admin Module Details
 - Module details view supports three per-module slices:
@@ -43,6 +44,11 @@ Card content fields include:
   - lesson metadata (`order`, `lesson_id`, card/command counts),
   - profile progression summary (attempted/correct totals + lesson breakdown).
 - Progression uses attempts history: "correct" means at least one correct attempt for a card.
+
+## Learn Resume and Outdated Groups
+- Learn flow resumes by default by skipping cards that already have a correct attempt.
+- When selecting a started module, users can choose restart (`r`) to re-run from the beginning.
+- Learn menu includes grouped outdated-module updates to batch newly added cards.
 
 ## Profile Export/Import
 - Export/import is implemented in `LearnService`:

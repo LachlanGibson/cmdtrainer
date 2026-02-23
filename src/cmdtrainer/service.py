@@ -225,6 +225,12 @@ class LearnService:
         self.progress.mark_module_started(profile_id, module_id)
         return module
 
+    def correct_card_ids_for_module(self, profile_id: int, module_id: str) -> set[str]:
+        """Return card ids with at least one correct attempt for a module."""
+        module = self.modules[module_id]
+        card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+        return self.progress.correct_card_ids(profile_id, card_ids)
+
     def list_module_command_references(self, module_id: str) -> list[CommandReference]:
         """Return unique commands in a module with aggregated tested flags."""
         module = self.modules[module_id]
@@ -335,8 +341,12 @@ class LearnService:
             module = self.modules.get(module_id)
             if module is None:
                 continue
+            module_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+            correct_ids = self.progress.correct_card_ids(profile_id, module_card_ids)
             for lesson in module.lessons:
                 for card in lesson.cards:
+                    if card.id not in correct_ids:
+                        continue
                     schedule = self.progress.get_card_schedule(profile_id, card.id)
                     if schedule is None:
                         item = QueueItem(
@@ -415,8 +425,12 @@ class LearnService:
             module = self.modules.get(module_id)
             if module is None:
                 continue
+            module_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+            correct_ids = self.progress.correct_card_ids(profile_id, module_card_ids)
             for lesson in module.lessons:
                 for card in lesson.cards:
+                    if card.id not in correct_ids:
+                        continue
                     schedule = self.progress.get_card_schedule(profile_id, card.id)
                     if schedule is None:
                         due.append(card)

@@ -140,3 +140,5 @@ Build a profile-based command-learning CLI with guided first-time module learnin
 8. Module progression reporting uses attempts history where "correct" means at least one correct attempt for a card.
 9. End-user launch path supports Python-only execution from repo root via `python cmdtrainer` and module entry via `python -m cmdtrainer`.
 10. Profile backup/transfer uses a versioned JSON export format with tolerant import normalization for older payloads and explicit rejection of unsupported newer versions.
+11. Learn flow resumes by default using existing correctness data (skip mastered cards) and offers explicit restart; grouped outdated-module updates are available under Learn.
+12. Practice queue/cards are restricted to cards with at least one prior correct attempt.

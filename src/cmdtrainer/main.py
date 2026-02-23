@@ -212,7 +212,7 @@ def _status_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> N
 
 
 def _learn_module_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
-    """Run first-time guided learning flow for one module."""
+    """Run guided learning flow for one module, with grouped outdated shortcut."""
     all_states = service.list_module_states(profile_id)
     states = [state for state in all_states if state.unlocked]
     if not states:
@@ -260,9 +260,13 @@ def _learn_module_flow(service: LearnService, profile_id: int, input_fn: InputFn
         missing = [dep for dep in state.module.prerequisites if dep not in completed_ids]
         print_fn(f"{state.module.id:<{id_width}} {', '.join(missing)}")
 
+    print_fn("g) Grouped outdated modules")
     print_fn("b) Back")
     print_fn("q) Quit")
     choice = input_fn("Choose module: ").strip().lower()
+    if choice == "g":
+        _learn_outdated_modules_flow(service, profile_id, input_fn, print_fn)
+        return
     if choice in MENU_BACK_COMMANDS:
         return
     if choice in MENU_QUIT_COMMANDS:
@@ -276,8 +280,40 @@ def _learn_module_flow(service: LearnService, profile_id: int, input_fn: InputFn
         print_fn("Invalid choice.")
         return
 
-    module = service.begin_module(profile_id, states[index].module.id)
-    _run_guided_module(service, profile_id, module, input_fn, print_fn)
+    selected_state = states[index]
+    module = service.begin_module(profile_id, selected_state.module.id)
+    restart = False
+    if selected_state.started:
+        mode = input_fn("Press Enter to resume or type r to restart: ").strip().lower()
+        restart = mode == "r"
+    _run_guided_module(service, profile_id, module, input_fn, print_fn, restart=restart)
+
+
+def _learn_outdated_modules_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+    """Run guided updates across all outdated modules."""
+    states = [state for state in service.list_module_states(profile_id) if state.outdated and state.unlocked]
+    if not states:
+        print_fn("No outdated modules to update.")
+        return
+
+    print_fn("\n=== Grouped Outdated Modules ===")
+    for item in states:
+        print_fn(f"- {item.module.id}: {item.module.title}")
+    confirm = input_fn("Press Enter to start updates (or b to cancel): ").strip().lower()
+    if confirm in MENU_BACK_COMMANDS:
+        return
+    if confirm in MENU_QUIT_COMMANDS:
+        raise QuitApp()
+
+    updated = 0
+    for state in states:
+        module = service.begin_module(profile_id, state.module.id)
+        completed = _run_guided_module(service, profile_id, module, input_fn, print_fn, restart=False)
+        if not completed:
+            print_fn(f"Stopped early after updating {updated} module(s).")
+            return
+        updated += 1
+    print_fn(f"Outdated module update complete: {updated} module(s).")
 
 
 def _module_lessons_flow(service: LearnService, module: Module, print_fn: PrintFn) -> None:
@@ -547,25 +583,37 @@ def _run_guided_module(
     module: Module,
     input_fn: InputFn,
     print_fn: PrintFn,
-) -> None:
+    *,
+    restart: bool = False,
+) -> bool:
     """Guide through all cards by showing answers first, then requiring input."""
     print_fn(f"\nStarting module: {module.title}")
     print_fn(module.description)
     print_fn("Type :b or :q to exit module.")
-
+    correct_card_ids: set[str] = set()
+    if not restart:
+        correct_card_ids = service.correct_card_ids_for_module(profile_id, module.id)
+    skipped = 0
     for lesson in module.lessons:
         print_fn(f"\nLesson {lesson.order}: {lesson.title}")
         for card in lesson.cards:
+            if not restart and card.id in correct_card_ids:
+                skipped += 1
+                continue
             should_continue = _run_guided_card(service, profile_id, card, input_fn, print_fn)
             if not should_continue:
                 print_fn("Leaving module. Progress saved.")
-                return
+                return False
+            correct_card_ids.add(card.id)
+    if skipped > 0 and not restart:
+        print_fn(f"Skipped {skipped} previously mastered card(s).")
 
     completed = service.complete_module_if_mastered(profile_id, module)
     if completed:
         print_fn("Module completed for the first time.")
     else:
         print_fn("Module progress saved.")
+    return True
 
 
 def _run_guided_card(

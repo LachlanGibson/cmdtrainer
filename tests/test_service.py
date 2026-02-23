@@ -86,6 +86,25 @@ def test_get_module_missing() -> None:
     assert service.get_module("missing") is None
 
 
+def test_correct_card_ids_for_module() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("correct-ids")
+    module = service.begin_module(profile.id, "base-linux")
+    first = module.lessons[0].cards[0]
+    service.record_answer(profile.id, first, first.answers[0])
+    assert first.id in service.correct_card_ids_for_module(profile.id, "base-linux")
+
+
+def test_force_unlock_missing_module_raises_key_error() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("force-missing")
+    try:
+        service.force_unlock_module_with_dependencies(profile.id, "missing")
+        raise AssertionError("Expected KeyError.")
+    except KeyError:
+        pass
+
+
 def test_card_validation_token_matching() -> None:
     service = LearnService(":memory:")
     card = Card(
@@ -193,6 +212,10 @@ def test_due_cards_avoids_immediate_repeat_when_multiple_due(monkeypatch: Any) -
     profile = service.create_profile("p6")
     module = service.begin_module(profile.id, "base-linux")
     first_id = module.lessons[0].cards[0].id
+    second_card = module.lessons[0].cards[1]
+    first_card = module.lessons[0].cards[0]
+    service.record_answer(profile.id, first_card, first_card.answers[0])
+    service.record_answer(profile.id, second_card, second_card.answers[0])
     service._last_presented_card_id[profile.id] = first_id  # noqa: SLF001
 
     monkeypatch.setattr("cmdtrainer.service.random.shuffle", lambda cards: None)
@@ -268,13 +291,27 @@ def test_practice_queue_contains_new_due_and_scheduled() -> None:
     profile = service.create_profile("queue-mix")
     module = service.begin_module(profile.id, "base-linux")
     first = module.lessons[0].cards[0]
-    second = module.lessons[0].cards[1]
     service.record_answer(profile.id, first, first.answers[0])
 
     items = service.practice_queue(profile.id, limit=500)
     by_id = {item.card_id: item for item in items}
     assert by_id[first.id].status in {"due", "scheduled"}
-    assert by_id[second.id].status == "new"
+    assert len(items) == 1
+
+
+def test_practice_queue_new_status_from_attempts_without_schedule() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("queue-new-status")
+    module = service.begin_module(profile.id, "base-linux")
+    card = module.lessons[0].cards[0]
+    now = datetime.now(UTC).isoformat()
+    with service.progress._conn:  # noqa: SLF001
+        service.progress._conn.execute(  # noqa: SLF001
+            "INSERT INTO attempts (profile_id, card_id, user_input, is_correct, created_at) VALUES (?, ?, ?, ?, ?)",
+            (profile.id, card.id, card.answers[0], 1, now),
+        )
+    items = service.practice_queue(profile.id, limit=50)
+    assert any(item.card_id == card.id and item.status == "new" for item in items)
 
 
 def test_export_import_profile_round_trip(tmp_path: Path) -> None:
