@@ -10,6 +10,7 @@ This app does **not execute learner commands**. It validates typed command strin
 - Guided first-time module learning:
   - Prompt + answer shown.
   - You type until correct.
+- Learn menu supports grouped outdated-module updates.
 - General randomized practice with spaced repetition.
 - Module prerequisites and progress tracking.
 - Module details reference:
@@ -52,6 +53,7 @@ cmdtrainer
    - `q) Quit`
 3. After first completion of a module, its cards appear in spaced-repetition review.
 4. Use `General practice` for mixed random due cards.
+5. Learn flow resumes by default by skipping already-mastered cards; use restart to re-run from the beginning.
 
 ## Admin Menu
 
@@ -69,6 +71,9 @@ Export/import notes:
 - Export includes profile progress, card scheduling state, and attempts history.
 - Import uses a versioned JSON format and rejects unsupported newer export versions with a clear error.
 - Missing optional fields in older export files are defaulted when importing.
+
+Practice notes:
+- Practice includes only cards with at least one prior correct attempt.
 
 ## Validation
 

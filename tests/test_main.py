@@ -14,6 +14,7 @@ class DummyService:
         self.profile_id = 1
         self.closed = False
         self._profiles: list[DummyProfile] = []
+        self.correct_ids_by_module: dict[str, set[str]] = {}
 
     def close(self) -> None:
         self.closed = True
@@ -138,6 +139,9 @@ class DummyService:
             {"profile_id": 2, "profile_name": name, "module_rows": 1, "card_rows": 2, "attempt_rows": 3},
         )()
 
+    def correct_card_ids_for_module(self, profile_id: int, module_id: str) -> set[str]:
+        return set(self.correct_ids_by_module.get(module_id, set()))
+
 
 def test_run_enters_play_shell(monkeypatch: Any) -> None:
     monkeypatch.setattr(main, "play_shell", lambda: 0)
@@ -230,7 +234,7 @@ def test_learn_module_flow_back_from_menu() -> None:
     outputs: list[str] = []
     inputs = iter(["b"])
     main._learn_module_flow(service, 1, lambda _: next(inputs), outputs.append)
-    assert any("Learn Module" in line for line in outputs)
+    assert any("=== Learn Module ===" in line for line in outputs)
 
 
 def test_learn_module_flow_back_during_card() -> None:
@@ -264,6 +268,59 @@ def test_learn_module_flow_no_unlocked() -> None:
     outputs: list[str] = []
     main._learn_module_flow(service, 1, lambda _: "", outputs.append)
     assert any("No unlocked modules" in line for line in outputs)
+
+
+def test_learn_module_flow_shows_locked_and_back_from_module_select() -> None:
+    class MixedService(DummyService):
+        def list_module_states(self, profile_id: int) -> list[object]:
+            unlocked_module = type("M", (), {"id": "base-linux", "title": "Base", "prerequisites": []})()
+            locked_module = type("M", (), {"id": "apt", "title": "APT", "prerequisites": ["base-linux"]})()
+            unlocked = type(
+                "S",
+                (),
+                {"module": unlocked_module, "unlocked": True, "started": False, "completed": False, "outdated": False},
+            )()
+            locked = type(
+                "S",
+                (),
+                {"module": locked_module, "unlocked": False, "started": False, "completed": False, "outdated": False},
+            )()
+            return [unlocked, locked]
+
+    outputs: list[str] = []
+    inputs = iter(["b"])
+    main._learn_module_flow(MixedService(), 1, lambda _: next(inputs), outputs.append)
+    assert any("Locked Modules" in line for line in outputs)
+    assert any("apt" in line for line in outputs)
+
+
+def test_learn_module_flow_quit_from_module_select() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    inputs = iter(["q"])
+    try:
+        main._learn_module_flow(service, 1, lambda _: next(inputs), outputs.append)
+        raise AssertionError("Expected QuitApp.")
+    except main.QuitApp:
+        pass
+
+
+def test_learn_module_flow_started_module_restart_option() -> None:
+    class StartedService(DummyService):
+        def list_module_states(self, profile_id: int) -> list[object]:
+            module = type("M", (), {"id": "base-linux", "title": "Base", "prerequisites": []})()
+            state = type(
+                "S",
+                (),
+                {"module": module, "unlocked": True, "started": True, "completed": False, "outdated": False},
+            )()
+            return [state]
+
+    service = StartedService()
+    outputs: list[str] = []
+    inputs = iter(["1", "r", "pwd"])
+    main._learn_module_flow(service, 1, lambda _: next(inputs), outputs.append)
+    assert any("Module completed" in line for line in outputs)
 
 
 def test_general_practice_flow_show_answer() -> None:
@@ -534,6 +591,88 @@ def test_import_export_flow_empty_path_validation() -> None:
     outputs = []
     main._import_profile_flow(service, lambda _: "", outputs.append)
     assert any("File path is required." in line for line in outputs)
+
+
+def test_learn_module_flow_grouped_outdated_modules() -> None:
+    class OutdatedService(DummyService):
+        def list_module_states(self, profile_id: int) -> list[object]:
+            module = type("M", (), {"id": "base-linux", "title": "Base", "prerequisites": []})()
+            state = type(
+                "S",
+                (),
+                {"module": module, "unlocked": True, "started": True, "completed": True, "outdated": True},
+            )()
+            return [state]
+
+    service = OutdatedService()
+    outputs: list[str] = []
+    inputs = iter(["g", "", "pwd"])
+    main._learn_module_flow(service, 1, lambda _: next(inputs), outputs.append)
+    assert any("Grouped Outdated Modules" in line for line in outputs)
+    assert any("Outdated module update complete" in line for line in outputs)
+
+
+def test_learn_outdated_modules_flow_none_and_cancel_and_quit() -> None:
+    service = DummyService()
+    outputs: list[str] = []
+    main._learn_outdated_modules_flow(service, 1, lambda _: "", outputs.append)
+    assert any("No outdated modules" in line for line in outputs)
+
+    class OutdatedService(DummyService):
+        def list_module_states(self, profile_id: int) -> list[object]:
+            module = type("M", (), {"id": "base-linux", "title": "Base", "prerequisites": []})()
+            state = type(
+                "S",
+                (),
+                {"module": module, "unlocked": True, "started": True, "completed": True, "outdated": True},
+            )()
+            return [state]
+
+    outputs = []
+    main._learn_outdated_modules_flow(OutdatedService(), 1, lambda _: "b", outputs.append)
+    assert any("Grouped Outdated Modules" in line for line in outputs)
+
+    outputs = []
+    try:
+        main._learn_outdated_modules_flow(OutdatedService(), 1, lambda _: "q", outputs.append)
+        raise AssertionError("Expected QuitApp.")
+    except main.QuitApp:
+        pass
+
+
+def test_learn_outdated_modules_flow_stops_early() -> None:
+    class OutdatedService(DummyService):
+        def list_module_states(self, profile_id: int) -> list[object]:
+            module = type("M", (), {"id": "base-linux", "title": "Base", "prerequisites": []})()
+            state = type(
+                "S",
+                (),
+                {"module": module, "unlocked": True, "started": True, "completed": True, "outdated": True},
+            )()
+            return [state]
+
+    outputs: list[str] = []
+    inputs = iter(["", ":back"])
+    main._learn_outdated_modules_flow(OutdatedService(), 1, lambda _: next(inputs), outputs.append)
+    assert any("Stopped early after updating 0 module(s)." in line for line in outputs)
+
+
+def test_run_guided_module_skips_mastered_cards() -> None:
+    service = DummyService()
+    service.correct_ids_by_module["base-linux"] = {"c"}
+    outputs: list[str] = []
+    module = service.begin_module(1, "base-linux")
+    main._run_guided_module(service, 1, module, lambda _: "pwd", outputs.append)
+    assert any("Skipped 1 previously mastered card" in line for line in outputs)
+
+
+def test_run_guided_module_restart_does_not_skip_mastered() -> None:
+    service = DummyService()
+    service.correct_ids_by_module["base-linux"] = {"c"}
+    outputs: list[str] = []
+    module = service.begin_module(1, "base-linux")
+    main._run_guided_module(service, 1, module, lambda _: "pwd", outputs.append, restart=True)
+    assert not any("Skipped 1 previously mastered card" in line for line in outputs)
 
 
 def test_run_guided_module_progress_saved_branch() -> None:
