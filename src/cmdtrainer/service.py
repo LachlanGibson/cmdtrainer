@@ -384,12 +384,14 @@ class LearnService:
 
     def card_is_correct(self, card: Card, user_input: str) -> bool:
         """Validate user command against accepted card answers."""
-        user_command = _normalize_command(user_input)
-        if user_command is None:
+        if _normalize_command(user_input) is None:
             return False
+        user_variants = _normalize_command_variants(user_input)
         for answer in card.answers:
-            expected = _normalize_command(answer)
-            if expected is not None and user_command == expected:
+            if _normalize_command(answer) is None:
+                continue
+            expected_variants = _normalize_command_variants(answer)
+            if expected_variants and not user_variants.isdisjoint(expected_variants):
                 return True
         return False
 
@@ -495,56 +497,74 @@ class NormalizedCommand:
 
 def _normalize_command(command: str) -> NormalizedCommand | None:
     """Return command with order-insensitive options and ordered positionals."""
+    variants = _normalize_command_variants(command)
+    if not variants:
+        return None
+    return min(variants, key=_normalized_command_sort_key)
+
+
+def _normalize_command_variants(command: str) -> set[NormalizedCommand]:
+    """Return all plausible normalized commands for ambiguous short-option forms."""
     stripped = command.strip()
     if not stripped:
-        return None
+        return set()
     try:
         tokens = shlex.split(stripped, posix=True)
     except ValueError:
-        return None
+        return set()
     if not tokens:
-        return None
-    return _canonicalize_tokens(tuple(token.strip() for token in tokens))
+        return set()
+    return _canonicalize_tokens_variants(tuple(token.strip() for token in tokens))
 
 
-def _canonicalize_tokens(tokens: tuple[str, ...]) -> NormalizedCommand | None:
-    """Build canonical command structure from shell tokens."""
+def _normalized_command_sort_key(
+    command: NormalizedCommand,
+) -> tuple[str, tuple[tuple[str, str], ...], tuple[str, ...]]:
+    """Return stable sort key for deterministic single-result normalization."""
+    normalized_options = tuple((key, "" if value is None else value) for key, value in command.options)
+    return (command.command, normalized_options, command.positionals)
+
+
+def _canonicalize_tokens_variants(tokens: tuple[str, ...]) -> set[NormalizedCommand]:
+    """Build canonical command structures from shell tokens, including ambiguous forms."""
     command = tokens[0]
-    options: list[tuple[str, str | None]] = []
-    positionals: list[str] = []
-    force_positionals = False
+    results: set[NormalizedCommand] = set()
 
-    index = 1
-    while index < len(tokens):
+    def walk(
+        index: int,
+        force_positionals: bool,
+        options: tuple[tuple[str, str | None], ...],
+        positionals: tuple[str, ...],
+    ) -> None:
+        if index >= len(tokens):
+            sorted_options = tuple(sorted(options, key=lambda pair: (pair[0], "" if pair[1] is None else pair[1])))
+            results.add(NormalizedCommand(command=command, options=sorted_options, positionals=positionals))
+            return
+
         token = tokens[index]
 
         if force_positionals:
-            positionals.append(token)
-            index += 1
-            continue
+            walk(index + 1, True, options, positionals + (token,))
+            return
 
         if token == "--":
-            force_positionals = True
-            index += 1
-            continue
+            walk(index + 1, True, options, positionals)
+            return
 
         if token.startswith("--") and len(token) > 2:
             key, value, consumed = _parse_long_option(tokens, index)
-            options.append((key, value))
-            index += consumed
-            continue
+            walk(index + consumed, False, options + ((key, value),), positionals)
+            return
 
         if token.startswith("-") and len(token) > 1:
-            short_options, consumed = _parse_short_option(tokens, index)
-            options.extend(short_options)
-            index += consumed
-            continue
+            for short_options, consumed in _parse_short_option_variants(tokens, index):
+                walk(index + consumed, False, options + tuple(short_options), positionals)
+            return
 
-        positionals.append(token)
-        index += 1
+        walk(index + 1, False, options, positionals + (token,))
 
-    options.sort(key=lambda pair: (pair[0], "" if pair[1] is None else pair[1]))
-    return NormalizedCommand(command=command, options=tuple(options), positionals=tuple(positionals))
+    walk(index=1, force_positionals=False, options=tuple(), positionals=tuple())
+    return results
 
 
 def _parse_long_option(tokens: tuple[str, ...], index: int) -> tuple[str, str | None, int]:
@@ -558,19 +578,22 @@ def _parse_long_option(tokens: tuple[str, ...], index: int) -> tuple[str, str | 
     return (token, None, 1)
 
 
-def _parse_short_option(tokens: tuple[str, ...], index: int) -> tuple[list[tuple[str, str | None]], int]:
-    """Parse short options, handling grouped boolean flags and single option values."""
+def _parse_short_option_variants(tokens: tuple[str, ...], index: int) -> list[tuple[list[tuple[str, str | None]], int]]:
+    """Parse short options, including ambiguous split-value forms."""
     token = tokens[index]
     # Combined single-letter flags like `-la` and `-al` are equivalent.
     if len(token) > 2 and token[1:].isalpha():
         flags = sorted(token[1:])
-        return ([(f"-{flag}", None) for flag in flags], 1)
+        return [([(f"-{flag}", None) for flag in flags], 1)]
 
     # Attached value form like `-p22`.
     if len(token) > 2:
-        return ([(token[:2], token[2:])], 1)
+        return [([(token[:2], token[2:])], 1)]
 
-    return ([(token, None)], 1)
+    variants: list[tuple[list[tuple[str, str | None]], int]] = [([(token, None)], 1)]
+    if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):
+        variants.append(([(token, tokens[index + 1])], 2))
+    return variants
 
 
 def _normalize_module_progress_rows(raw: object, now: str) -> list[dict[str, object]]:
