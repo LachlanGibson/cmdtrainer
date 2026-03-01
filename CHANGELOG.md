@@ -6,6 +6,20 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-01
+
+### Added
+
+- New Node.js runtime module (`node`) covering execution, diagnostics, watch mode, env-file usage, and built-in test runner flags.
+- New npm fundamentals module (`npm`) covering init, dependency workflows, scripts/exec, audit/security, config, and publishing basics.
+- New npm workspaces module (`npm-workspaces`) for workspace-targeted install/run/exec/list/pkg workflows.
+- New Node release capstone module (`node-release`) covering preflight checks, packaging, versioning, tagging, publishing, and dist-tag operations.
+
+### Changed
+
+- Module baseline ownership/overlap policy now includes npm/git command ownership used by the new capstone/workspace modules.
+- Command normalization tests now include npm script passthrough and workspace short-flag ordering cases.
+
 ## [1.2.1] - 2026-02-25
 
 ### Fixed

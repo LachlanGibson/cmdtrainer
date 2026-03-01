@@ -1,0 +1,156 @@
+{
+  "id": "npm-workspaces",
+  "title": "npm Workspaces",
+  "description": "Monorepo workflows with npm workspaces for install, scripts, and package metadata operations.",
+  "prerequisites": [
+    "npm"
+  ],
+  "lessons": [
+    {
+      "id": "npm-workspaces-targeting",
+      "title": "Targeting Workspaces",
+      "order": 1,
+      "cards": [
+        {
+          "id": "npm-workspaces-init-workspace",
+          "prompt": "Using npm, initialize package.json in workspace packages/api with defaults.",
+          "answers": [
+            "npm init -w packages/api -y",
+            "npm init --workspace packages/api -y"
+          ],
+          "explanation": "Creates package metadata directly in a selected workspace.",
+          "command": "npm init",
+          "tested_flags": [
+            "--workspace",
+            "-w",
+            "-y"
+          ]
+        },
+        {
+          "id": "npm-workspaces-install-workspace-dependency",
+          "prompt": "Using npm, install zod in workspace packages/api only.",
+          "answers": [
+            "npm install zod -w packages/api",
+            "npm install zod --workspace packages/api"
+          ],
+          "explanation": "Targets dependency install to one workspace package.",
+          "command": "npm install",
+          "tested_flags": [
+            "--workspace",
+            "-w"
+          ]
+        },
+        {
+          "id": "npm-workspaces-install-root-only",
+          "prompt": "Using npm, install all dependencies while skipping workspace package installs.",
+          "answers": [
+            "npm install --workspaces=false"
+          ],
+          "explanation": "Useful when you only need root-level dependencies.",
+          "command": "npm install",
+          "tested_flags": [
+            "--workspaces"
+          ]
+        },
+        {
+          "id": "npm-workspaces-run-single",
+          "prompt": "Using npm, run build in workspace packages/web only.",
+          "answers": [
+            "npm run build -w packages/web",
+            "npm run build --workspace packages/web"
+          ],
+          "explanation": "Runs one script in one selected workspace.",
+          "command": "npm run",
+          "tested_flags": [
+            "--workspace",
+            "-w"
+          ]
+        },
+        {
+          "id": "npm-workspaces-run-all-serial",
+          "prompt": "Using npm, run test across all workspaces in serial order.",
+          "answers": [
+            "npm run test --workspaces"
+          ],
+          "explanation": "Executes same script across workspace packages.",
+          "command": "npm run",
+          "tested_flags": [
+            "--workspaces"
+          ]
+        },
+        {
+          "id": "npm-workspaces-run-all-if-present",
+          "prompt": "Using npm, run lint in all workspaces and skip those missing that script.",
+          "answers": [
+            "npm run lint --workspaces --if-present"
+          ],
+          "explanation": "--if-present avoids failures in packages that do not define the script.",
+          "command": "npm run",
+          "tested_flags": [
+            "--if-present",
+            "--workspaces"
+          ]
+        },
+        {
+          "id": "npm-workspaces-exec-single",
+          "prompt": "Using npm, execute vitest in workspace packages/api.",
+          "answers": [
+            "npm exec -w packages/api vitest",
+            "npm exec --workspace packages/api vitest"
+          ],
+          "explanation": "Executes a package binary within one workspace context.",
+          "command": "npm exec",
+          "tested_flags": [
+            "--workspace",
+            "-w"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npm-workspaces-inspection-and-metadata",
+      "title": "Inspection and Metadata",
+      "order": 2,
+      "cards": [
+        {
+          "id": "npm-workspaces-list-root-deps-all-workspaces",
+          "prompt": "Using npm, list top-level dependencies across all workspaces.",
+          "answers": [
+            "npm ls --workspaces --depth=0"
+          ],
+          "explanation": "Summarizes direct dependencies by workspace package.",
+          "command": "npm ls",
+          "tested_flags": [
+            "--depth",
+            "--workspaces"
+          ]
+        },
+        {
+          "id": "npm-workspaces-pkg-set-type-module",
+          "prompt": "Using npm, set package type=module in workspace packages/api.",
+          "answers": [
+            "npm pkg set type=module -w packages/api",
+            "npm pkg set type=module --workspace packages/api"
+          ],
+          "explanation": "Edits package.json for a specific workspace package.",
+          "command": "npm pkg",
+          "tested_flags": [
+            "--workspace",
+            "-w"
+          ]
+        },
+        {
+          "id": "npm-workspaces-query-all-names",
+          "prompt": "Using npm, query all workspace package names from package metadata.",
+          "answers": [
+            "npm query .workspace.name"
+          ],
+          "explanation": "npm query can inspect dependency and workspace metadata trees.",
+          "command": "npm query",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

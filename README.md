@@ -21,6 +21,7 @@ This app does **not execute learner commands**. It validates typed command strin
 - Admin force unlock for a module and all prerequisite modules.
 - Profile export/import to JSON for backup and transfer.
 - Expanded modules for networking, HTTP clients, tmux, process tooling, and archives/compression.
+- Added Node.js and npm learning tracks, including workspace and release-capstone modules.
 - Content/version-aware progression:
   - module completion records content version,
   - modules can show as outdated after content updates,
@@ -99,6 +100,10 @@ Practice notes:
 - `tmux`
 - `process-tools`
 - `archive-tools`
+- `node`
+- `npm`
+- `npm-workspaces`
+- `node-release`
 
 ## Notes
 

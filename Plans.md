@@ -39,6 +39,12 @@ Build a profile-based command-learning CLI with guided first-time module learnin
 4. `process-tools`
 5. `archive-tools`
 
+### Added now (Node ecosystem)
+1. `node`
+2. `npm`
+3. `npm-workspaces`
+4. `node-release`
+
 ## Dependency Graph
 - base-linux -> apt
 - base-linux -> git
@@ -55,6 +61,10 @@ Build a profile-based command-learning CLI with guided first-time module learnin
 - base-linux -> tmux
 - base-linux -> process-tools
 - base-linux -> archive-tools
+- base-linux -> node
+- node -> npm
+- npm -> npm-workspaces
+- git + npm -> node-release
 
 ## Learning and Practice Model
 ### First-time module learning

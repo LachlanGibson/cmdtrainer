@@ -1,0 +1,278 @@
+{
+  "id": "node",
+  "title": "Node.js Runtime",
+  "description": "Core Node.js runtime execution, diagnostics, and built-in test runner drills.",
+  "prerequisites": [
+    "base-linux"
+  ],
+  "lessons": [
+    {
+      "id": "node-runtime-basics",
+      "title": "Runtime Basics",
+      "order": 1,
+      "cards": [
+        {
+          "id": "node-version",
+          "prompt": "Using node, show the installed Node.js version.",
+          "answers": [
+            "node -v",
+            "node --version"
+          ],
+          "explanation": "Shows the runtime version used by your project and scripts.",
+          "command": "node",
+          "tested_flags": [
+            "--version",
+            "-v"
+          ]
+        },
+        {
+          "id": "node-help",
+          "prompt": "Using node, display command-line help.",
+          "answers": [
+            "node --help",
+            "node -h"
+          ],
+          "explanation": "Useful to discover runtime flags and test-runner options.",
+          "command": "node",
+          "tested_flags": [
+            "--help",
+            "-h"
+          ]
+        },
+        {
+          "id": "node-run-script",
+          "prompt": "Using node, run script file app.js.",
+          "answers": [
+            "node app.js"
+          ],
+          "explanation": "Runs a JavaScript file with the Node.js runtime.",
+          "command": "node",
+          "tested_flags": []
+        },
+        {
+          "id": "node-check-syntax",
+          "prompt": "Using node, check syntax of app.js without running it.",
+          "answers": [
+            "node --check app.js",
+            "node -c app.js"
+          ],
+          "explanation": "Validates syntax and exits before executing code.",
+          "command": "node",
+          "tested_flags": [
+            "--check",
+            "-c"
+          ]
+        },
+        {
+          "id": "node-inline-eval",
+          "prompt": "Using node, evaluate one expression inline that logs ok.",
+          "answers": [
+            "node -e \"console.log('ok')\"",
+            "node --eval \"console.log('ok')\""
+          ],
+          "explanation": "Inline evaluation is useful in quick shell scripts.",
+          "command": "node",
+          "tested_flags": [
+            "--eval",
+            "-e"
+          ]
+        },
+        {
+          "id": "node-inline-print",
+          "prompt": "Using node, print process.version without writing a script file.",
+          "answers": [
+            "node -p \"process.version\"",
+            "node --print \"process.version\""
+          ],
+          "explanation": "-p prints the expression result directly.",
+          "command": "node",
+          "tested_flags": [
+            "--print",
+            "-p"
+          ]
+        },
+        {
+          "id": "node-input-type-module",
+          "prompt": "Using node, run inline ESM code by setting input type to module.",
+          "answers": [
+            "node --input-type=module -e \"await Promise.resolve(1)\"",
+            "node --input-type module -e \"await Promise.resolve(1)\""
+          ],
+          "explanation": "Sets parser mode for inline code snippets that use module syntax.",
+          "command": "node",
+          "tested_flags": [
+            "--input-type",
+            "-e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "node-debug-and-runtime-flags",
+      "title": "Debug and Runtime Flags",
+      "order": 2,
+      "cards": [
+        {
+          "id": "node-inspect",
+          "prompt": "Using node, run app.js with inspector enabled.",
+          "answers": [
+            "node --inspect app.js"
+          ],
+          "explanation": "Starts the inspector so debuggers can attach.",
+          "command": "node",
+          "tested_flags": [
+            "--inspect"
+          ]
+        },
+        {
+          "id": "node-inspect-break",
+          "prompt": "Using node, run app.js and break before user code executes.",
+          "answers": [
+            "node --inspect-brk app.js"
+          ],
+          "explanation": "Breaks immediately at startup for first-line debugging.",
+          "command": "node",
+          "tested_flags": [
+            "--inspect-brk"
+          ]
+        },
+        {
+          "id": "node-enable-source-maps",
+          "prompt": "Using node, run dist/server.js with source maps enabled.",
+          "answers": [
+            "node --enable-source-maps dist/server.js"
+          ],
+          "explanation": "Improves stack traces for transpiled TypeScript and bundler output.",
+          "command": "node",
+          "tested_flags": [
+            "--enable-source-maps"
+          ]
+        },
+        {
+          "id": "node-trace-warnings",
+          "prompt": "Using node, run app.js and include stack traces for process warnings.",
+          "answers": [
+            "node --trace-warnings app.js"
+          ],
+          "explanation": "Helps locate where deprecations and warnings originate.",
+          "command": "node",
+          "tested_flags": [
+            "--trace-warnings"
+          ]
+        },
+        {
+          "id": "node-watch",
+          "prompt": "Using node, run app.js in watch mode so it restarts on file changes.",
+          "answers": [
+            "node --watch app.js"
+          ],
+          "explanation": "Watch mode is useful for local iteration loops.",
+          "command": "node",
+          "tested_flags": [
+            "--watch"
+          ]
+        },
+        {
+          "id": "node-env-file",
+          "prompt": "Using node, run app.js while loading variables from .env.",
+          "answers": [
+            "node --env-file=.env app.js",
+            "node --env-file .env app.js"
+          ],
+          "explanation": "Loads environment variables from a file before app start.",
+          "command": "node",
+          "tested_flags": [
+            "--env-file"
+          ]
+        },
+        {
+          "id": "node-max-old-space-size",
+          "prompt": "Using node, run build.js with V8 old space limit set to 4096 MB.",
+          "answers": [
+            "node --max-old-space-size=4096 build.js",
+            "node --max-old-space-size 4096 build.js"
+          ],
+          "explanation": "Common for memory-heavy build and lint pipelines.",
+          "command": "node",
+          "tested_flags": [
+            "--max-old-space-size"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "node-built-in-test-runner",
+      "title": "Built-in Test Runner",
+      "order": 3,
+      "cards": [
+        {
+          "id": "node-test",
+          "prompt": "Using node, run tests with the built-in test runner.",
+          "answers": [
+            "node --test"
+          ],
+          "explanation": "Runs test files without an external test CLI.",
+          "command": "node",
+          "tested_flags": [
+            "--test"
+          ]
+        },
+        {
+          "id": "node-test-watch",
+          "prompt": "Using node, run tests in watch mode.",
+          "answers": [
+            "node --test --watch",
+            "node --watch --test"
+          ],
+          "explanation": "Re-runs tests when files change.",
+          "command": "node",
+          "tested_flags": [
+            "--test",
+            "--watch"
+          ]
+        },
+        {
+          "id": "node-test-name-pattern",
+          "prompt": "Using node, run only tests whose names match auth.",
+          "answers": [
+            "node --test --test-name-pattern auth"
+          ],
+          "explanation": "Filters to matching test names for focused runs.",
+          "command": "node",
+          "tested_flags": [
+            "--test",
+            "--test-name-pattern"
+          ]
+        },
+        {
+          "id": "node-test-reporter-spec",
+          "prompt": "Using node, run tests with the spec reporter.",
+          "answers": [
+            "node --test --test-reporter spec"
+          ],
+          "explanation": "Changes test output style in CI or local runs.",
+          "command": "node",
+          "tested_flags": [
+            "--test",
+            "--test-reporter"
+          ]
+        },
+        {
+          "id": "node-test-timeout",
+          "prompt": "Using node, run tests with timeout set to 5000 milliseconds.",
+          "answers": [
+            "node --test --test-timeout 5000",
+            "node --test --test-timeout=5000"
+          ],
+          "explanation": "Applies timeout constraints for test execution.",
+          "command": "node",
+          "tested_flags": [
+            "--test",
+            "--test-timeout"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}
