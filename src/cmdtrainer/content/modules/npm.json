@@ -1,0 +1,424 @@
+{
+  "id": "npm",
+  "title": "npm Package Manager",
+  "description": "Essential npm workflows for project setup, dependencies, scripts, security, and publishing.",
+  "prerequisites": [
+    "node"
+  ],
+  "lessons": [
+    {
+      "id": "npm-cli-basics",
+      "title": "CLI Basics and Project Init",
+      "order": 1,
+      "cards": [
+        {
+          "id": "npm-version",
+          "prompt": "Using npm, show the installed npm CLI version.",
+          "answers": [
+            "npm -v",
+            "npm --version"
+          ],
+          "explanation": "Useful for diagnosing lockfile and registry behavior differences.",
+          "command": "npm",
+          "tested_flags": [
+            "--version",
+            "-v"
+          ]
+        },
+        {
+          "id": "npm-help",
+          "prompt": "Using npm, open help for the install command.",
+          "answers": [
+            "npm help install"
+          ],
+          "explanation": "Displays command docs from npm's built-in help.",
+          "command": "npm help",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-init-default",
+          "prompt": "Using npm, initialize package.json with defaults.",
+          "answers": [
+            "npm init -y",
+            "npm init --yes"
+          ],
+          "explanation": "Creates package.json without interactive prompts.",
+          "command": "npm init",
+          "tested_flags": [
+            "--yes",
+            "-y"
+          ]
+        },
+        {
+          "id": "npm-init-scope",
+          "prompt": "Using npm, initialize package.json under scope @acme with defaults.",
+          "answers": [
+            "npm init --scope=@acme -y",
+            "npm init --scope @acme -y"
+          ],
+          "explanation": "Scope is commonly used for organization-owned packages.",
+          "command": "npm init",
+          "tested_flags": [
+            "--scope",
+            "-y"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "npm-dependencies",
+      "title": "Dependencies and Reproducibility",
+      "order": 2,
+      "cards": [
+        {
+          "id": "npm-install",
+          "prompt": "Using npm, install dependencies from package.json.",
+          "answers": [
+            "npm install"
+          ],
+          "explanation": "Installs and updates package-lock.json as needed.",
+          "command": "npm install",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-install-package",
+          "prompt": "Using npm, install express as a production dependency.",
+          "answers": [
+            "npm install express"
+          ],
+          "explanation": "Adds dependency to package.json by default.",
+          "command": "npm install",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-install-save-dev",
+          "prompt": "Using npm, install vitest as a development dependency.",
+          "answers": [
+            "npm install -D vitest",
+            "npm install --save-dev vitest"
+          ],
+          "explanation": "Development dependencies are not needed at runtime.",
+          "command": "npm install",
+          "tested_flags": [
+            "--save-dev",
+            "-D"
+          ]
+        },
+        {
+          "id": "npm-install-global",
+          "prompt": "Using npm, install typescript globally.",
+          "answers": [
+            "npm install -g typescript",
+            "npm install --global typescript"
+          ],
+          "explanation": "Global installs are common for developer CLIs.",
+          "command": "npm install",
+          "tested_flags": [
+            "--global",
+            "-g"
+          ]
+        },
+        {
+          "id": "npm-install-save-exact",
+          "prompt": "Using npm, install axios pinned exactly to version 1.7.2.",
+          "answers": [
+            "npm install -E axios@1.7.2",
+            "npm install --save-exact axios@1.7.2"
+          ],
+          "explanation": "Exact pins avoid version drift in direct dependencies.",
+          "command": "npm install",
+          "tested_flags": [
+            "--save-exact",
+            "-E"
+          ]
+        },
+        {
+          "id": "npm-uninstall",
+          "prompt": "Using npm, remove lodash from the project.",
+          "answers": [
+            "npm uninstall lodash"
+          ],
+          "explanation": "Removes package and updates manifests.",
+          "command": "npm uninstall",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-update",
+          "prompt": "Using npm, update installed packages according to semver ranges.",
+          "answers": [
+            "npm update"
+          ],
+          "explanation": "Updates already-installed dependencies in place.",
+          "command": "npm update",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-ci",
+          "prompt": "Using npm, perform a clean install from package-lock.json.",
+          "answers": [
+            "npm ci"
+          ],
+          "explanation": "CI installs are faster and lockfile-strict.",
+          "command": "npm ci",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-prune-omit-dev",
+          "prompt": "Using npm, remove extraneous packages and omit dev dependencies.",
+          "answers": [
+            "npm prune --omit=dev",
+            "npm prune --omit dev"
+          ],
+          "explanation": "Common in production image build steps.",
+          "command": "npm prune",
+          "tested_flags": [
+            "--omit"
+          ]
+        },
+        {
+          "id": "npm-dedupe",
+          "prompt": "Using npm, deduplicate dependency tree entries.",
+          "answers": [
+            "npm dedupe"
+          ],
+          "explanation": "Can reduce nested duplicates and node_modules size.",
+          "command": "npm dedupe",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "npm-scripts-and-exec",
+      "title": "Scripts and Exec",
+      "order": 3,
+      "cards": [
+        {
+          "id": "npm-run-build",
+          "prompt": "Using npm, run the build script.",
+          "answers": [
+            "npm run build"
+          ],
+          "explanation": "Runs scripts defined under package.json scripts.",
+          "command": "npm run",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-run-silent",
+          "prompt": "Using npm, run test script in silent mode.",
+          "answers": [
+            "npm run -s test",
+            "npm run --silent test"
+          ],
+          "explanation": "Reduces noise in CI logs and local output.",
+          "command": "npm run",
+          "tested_flags": [
+            "--silent",
+            "-s"
+          ]
+        },
+        {
+          "id": "npm-run-pass-through-args",
+          "prompt": "Using npm, run test script and pass --watch and --coverage to the script command.",
+          "answers": [
+            "npm run test -- --watch --coverage"
+          ],
+          "explanation": "-- separates npm args from script args.",
+          "command": "npm run",
+          "tested_flags": [
+            "--"
+          ]
+        },
+        {
+          "id": "npm-test",
+          "prompt": "Using npm, run the default test lifecycle command.",
+          "answers": [
+            "npm test"
+          ],
+          "explanation": "Alias for npm run test.",
+          "command": "npm test",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-exec-eslint",
+          "prompt": "Using npm, execute eslint against the current directory via npm exec.",
+          "answers": [
+            "npm exec eslint ."
+          ],
+          "explanation": "Exec resolves binaries from local dependencies.",
+          "command": "npm exec",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-pkg-set-script",
+          "prompt": "Using npm, set scripts.lint to eslint . in package.json.",
+          "answers": [
+            "npm pkg set scripts.lint=\"eslint .\""
+          ],
+          "explanation": "Edits package.json fields directly from CLI.",
+          "command": "npm pkg",
+          "tested_flags": []
+        }
+      ]
+    },
+    {
+      "id": "npm-security-and-release",
+      "title": "Security, Inspection, and Release",
+      "order": 4,
+      "cards": [
+        {
+          "id": "npm-ls-depth-zero",
+          "prompt": "Using npm, list top-level installed dependencies only.",
+          "answers": [
+            "npm ls --depth=0",
+            "npm ls --depth 0"
+          ],
+          "explanation": "Keeps output focused on direct dependencies.",
+          "command": "npm ls",
+          "tested_flags": [
+            "--depth"
+          ]
+        },
+        {
+          "id": "npm-outdated",
+          "prompt": "Using npm, show outdated dependencies.",
+          "answers": [
+            "npm outdated"
+          ],
+          "explanation": "Shows current, wanted, and latest versions.",
+          "command": "npm outdated",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-audit",
+          "prompt": "Using npm, run a dependency security audit.",
+          "answers": [
+            "npm audit"
+          ],
+          "explanation": "Queries advisories for vulnerabilities in dependency tree.",
+          "command": "npm audit",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-audit-fix",
+          "prompt": "Using npm, automatically apply safe audit fixes.",
+          "answers": [
+            "npm audit fix"
+          ],
+          "explanation": "Attempts non-breaking upgrades to remediate issues.",
+          "command": "npm audit",
+          "tested_flags": [
+            "fix"
+          ]
+        },
+        {
+          "id": "npm-audit-fix-force",
+          "prompt": "Using npm, apply audit fixes including potential breaking changes.",
+          "answers": [
+            "npm audit fix --force"
+          ],
+          "explanation": "--force can install semver-major updates to fix vulnerabilities.",
+          "command": "npm audit",
+          "tested_flags": [
+            "--force",
+            "fix"
+          ]
+        },
+        {
+          "id": "npm-fund",
+          "prompt": "Using npm, show funding information for installed packages.",
+          "answers": [
+            "npm fund"
+          ],
+          "explanation": "Lists package funding URLs when available.",
+          "command": "npm fund",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-explain-react",
+          "prompt": "Using npm, explain why react is installed.",
+          "answers": [
+            "npm explain react"
+          ],
+          "explanation": "Helps trace transitive dependency paths.",
+          "command": "npm explain",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-config-set-save-exact",
+          "prompt": "Using npm, set config save-exact to true.",
+          "answers": [
+            "npm config set save-exact true"
+          ],
+          "explanation": "Configures npm defaults for future installs.",
+          "command": "npm config",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-config-get-registry",
+          "prompt": "Using npm, show current registry URL from config.",
+          "answers": [
+            "npm config get registry"
+          ],
+          "explanation": "Verifies registry resolution before installs/publish.",
+          "command": "npm config",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-version-patch",
+          "prompt": "Using npm, bump package version by patch and create a git tag.",
+          "answers": [
+            "npm version patch"
+          ],
+          "explanation": "Updates package version and tags release in git by default.",
+          "command": "npm version",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-version-no-git-tag",
+          "prompt": "Using npm, bump minor version without creating a git tag.",
+          "answers": [
+            "npm version minor --no-git-tag-version"
+          ],
+          "explanation": "Useful when release tagging is handled later in CI.",
+          "command": "npm version",
+          "tested_flags": [
+            "--no-git-tag-version"
+          ]
+        },
+        {
+          "id": "npm-pack",
+          "prompt": "Using npm, create a package tarball from current project.",
+          "answers": [
+            "npm pack"
+          ],
+          "explanation": "Builds the artifact that publish would upload.",
+          "command": "npm pack",
+          "tested_flags": []
+        },
+        {
+          "id": "npm-publish-public",
+          "prompt": "Using npm, publish package with public access.",
+          "answers": [
+            "npm publish --access public"
+          ],
+          "explanation": "Required for first publish of scoped public packages.",
+          "command": "npm publish",
+          "tested_flags": [
+            "--access"
+          ]
+        },
+        {
+          "id": "npm-view-version",
+          "prompt": "Using npm, view the latest published version of package left-pad.",
+          "answers": [
+            "npm view left-pad version"
+          ],
+          "explanation": "Useful preflight check during release and rollback work.",
+          "command": "npm view",
+          "tested_flags": []
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

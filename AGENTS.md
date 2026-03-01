@@ -29,6 +29,7 @@ The product form is a CLI tool.
 - Keep `README.md` (user-facing) and `README.dev.md` (developer-facing) up to date when behavior, menus, modules, setup, or quality gates change.
 - Keep `CHANGELOG.md` up to date for user-visible behavior changes, features, fixes, and breaking changes.
 - Keep user-facing copy concise and practical.
+- Ensure each card prompt is self-contained and still understandable during mixed/random practice outside its original lesson context.
 - Add tests for progression rules and exercise validation logic.
 - Keep overlap/dependency policy tests up to date in `tests/test_module_content_baseline.py`:
   - `test_overlapping_commands_follow_ownership_and_depth_rules`

@@ -8,6 +8,10 @@ def test_load_modules_contains_base() -> None:
     modules = load_modules()
     assert "base-linux" in modules
     assert modules["apt"].prerequisites == ["base-linux"]
+    assert modules["node"].prerequisites == ["base-linux"]
+    assert modules["npm"].prerequisites == ["node"]
+    assert modules["npm-workspaces"].prerequisites == ["npm"]
+    assert modules["node-release"].prerequisites == ["git", "npm"]
     assert modules["docker-context"].prerequisites == ["docker", "ssh"]
     assert modules["http-clients"].prerequisites == ["network-basics"]
     assert modules["base-linux"].content_version == 1

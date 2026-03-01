@@ -537,7 +537,10 @@ def _canonicalize_tokens_variants(tokens: tuple[str, ...]) -> set[NormalizedComm
         positionals: tuple[str, ...],
     ) -> None:
         if index >= len(tokens):
-            sorted_options = tuple(sorted(options, key=lambda pair: (pair[0], "" if pair[1] is None else pair[1])))
+            normalized_options = tuple((_normalize_option_key(command, key), value) for key, value in options)
+            sorted_options = tuple(
+                sorted(normalized_options, key=lambda pair: (pair[0], "" if pair[1] is None else pair[1]))
+            )
             results.add(NormalizedCommand(command=command, options=sorted_options, positionals=positionals))
             return
 
@@ -557,7 +560,7 @@ def _canonicalize_tokens_variants(tokens: tuple[str, ...]) -> set[NormalizedComm
             return
 
         if token.startswith("-") and len(token) > 1:
-            for short_options, consumed in _parse_short_option_variants(tokens, index):
+            for short_options, consumed in _parse_short_option_variants(command, tokens, index):
                 walk(index + consumed, False, options + tuple(short_options), positionals)
             return
 
@@ -578,17 +581,58 @@ def _parse_long_option(tokens: tuple[str, ...], index: int) -> tuple[str, str | 
     return (token, None, 1)
 
 
-def _parse_short_option_variants(tokens: tuple[str, ...], index: int) -> list[tuple[list[tuple[str, str | None]], int]]:
+def _normalize_option_key(command: str, key: str) -> str:
+    """Map equivalent option keys to one canonical form for a command."""
+    if command == "npm" and key == "--workspace":
+        return "-w"
+    return key
+
+
+def _parse_short_option_variants(
+    command: str, tokens: tuple[str, ...], index: int
+) -> list[tuple[list[tuple[str, str | None]], int]]:
     """Parse short options, including ambiguous split-value forms."""
     token = tokens[index]
     # Combined single-letter flags like `-la` and `-al` are equivalent.
     if len(token) > 2 and token[1:].isalpha():
+        # npm: `-w` consumes workspace value, so bundles containing `w`
+        # cannot be treated as order-insensitive short-flag sets.
+        if command == "npm" and "w" in token[1:]:
+            bundle = token[1:]
+            options: list[tuple[str, str | None]] = []
+            consumed = 1
+            i = 0
+            while i < len(bundle):
+                flag = bundle[i]
+                key = f"-{flag}"
+                if flag == "w":
+                    attached = bundle[i + 1 :]
+                    if attached:
+                        options.append((key, attached))
+                        i = len(bundle)
+                        continue
+                    if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):
+                        options.append((key, tokens[index + 1]))
+                        consumed = 2
+                    else:
+                        options.append((key, None))
+                    i += 1
+                    continue
+                options.append((key, None))
+                i += 1
+            return [(options, consumed)]
+
         flags = sorted(token[1:])
         return [([(f"-{flag}", None) for flag in flags], 1)]
 
     # Attached value form like `-p22`.
     if len(token) > 2:
         return [([(token[:2], token[2:])], 1)]
+
+    if command == "npm" and token == "-w":
+        if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):
+            return [([("-w", tokens[index + 1])], 2)]
+        return [([("-w", None)], 1)]
 
     variants: list[tuple[list[tuple[str, str | None]], int]] = [([(token, None)], 1)]
     if index + 1 < len(tokens) and not tokens[index + 1].startswith("-"):

@@ -28,6 +28,8 @@ def test_normalize_equivalent_command_pairs() -> None:
         ("grep --color=auto -n TODO file.txt", "grep -n --color auto TODO file.txt"),
         ("echo 'a b'", 'echo "a b"'),
         ("cmd -- -n", "cmd -- -n"),
+        ("npm run -s test -- --watch", "npm run test -s -- --watch"),
+        ("npm run build -w packages/web", "npm run build --workspace packages/web"),
     ]
     for left_command, right_command in cases:
         left = _normalize_command(left_command)
@@ -47,6 +49,8 @@ def test_normalize_non_equivalent_command_pairs() -> None:
         ("cmd -v -v target", "cmd -v target"),
         ('echo "a b"', "echo a b"),
         ("ls -la /tmp", "cat -la /tmp"),
+        ("npm run test -- --watch", "npm run test --watch"),
+        ("npm run test --workspaces", "npm run test -ws"),
     ]
     for left_command, right_command in cases:
         left = _normalize_command(left_command)
@@ -92,6 +96,10 @@ def test_card_validation_cases() -> None:
         ("pstree -p 1", "pstree -p 2", False),
         ("cmd -- -n", "cmd -n", False),
         ('echo "a b"', "echo a b", False),
+        ("npm run test -- --watch", "npm run test -- --watch", True),
+        ("npm run test -- --watch", "npm run test --watch", False),
+        ("npm run test --workspaces", "npm run test -ws", False),
+        ("npm run build -w packages/web", "npm run build --workspace packages/web", True),
     ]
     service = LearnService(":memory:")
     for answer, user_input, expected_correct in cases:

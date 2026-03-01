@@ -102,6 +102,11 @@ git push origin v0.1.0
 - Required: >=95%
 - Enforced by pytest-cov in `pyproject.toml`.
 
+## Current Module Families
+- Core shell and tooling: `base-linux`, `apt`, `git`, `ssh`, `docker*`, `file-tools`, `archive-tools`
+- Networking and terminal ops: `network-basics`, `http-clients`, `tmux`, `process-tools`
+- Node ecosystem: `node`, `npm`, `npm-workspaces`, `node-release`
+
 ## Content Guardrails
 - `tests/test_module_content_baseline.py` enforces baseline command and flag coverage per module.
 - `tests/test_module_content_baseline.py` also enforces cross-module command ownership/overlap and prerequisite policy.

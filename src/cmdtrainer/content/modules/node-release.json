@@ -1,0 +1,198 @@
+{
+  "id": "node-release",
+  "title": "Node Package Release Capstone",
+  "description": "End-to-end Node package release drills combining npm packaging/publishing with git tagging.",
+  "prerequisites": [
+    "git",
+    "npm"
+  ],
+  "lessons": [
+    {
+      "id": "node-release-preflight",
+      "title": "Preflight and Artifact Validation",
+      "order": 1,
+      "cards": [
+        {
+          "id": "node-release-npm-ci",
+          "prompt": "Using npm, run a clean install from lockfile before releasing.",
+          "answers": [
+            "npm ci --ignore-scripts"
+          ],
+          "explanation": "Ensures reproducible dependency state for release validation.",
+          "command": "npm ci",
+          "tested_flags": [
+            "--ignore-scripts"
+          ]
+        },
+        {
+          "id": "node-release-npm-test-ci",
+          "prompt": "Using npm, run the test script with CI environment variable enabled.",
+          "answers": [
+            "CI=true npm test -- --runInBand"
+          ],
+          "explanation": "CI mode often disables watch behavior and tightens failures.",
+          "command": "npm test",
+          "tested_flags": [
+            "--"
+          ]
+        },
+        {
+          "id": "node-release-npm-pack-json",
+          "prompt": "Using npm, create a package tarball and print JSON metadata for packed files.",
+          "answers": [
+            "npm pack --json"
+          ],
+          "explanation": "Validates packed contents and tarball name before publish.",
+          "command": "npm pack",
+          "tested_flags": [
+            "--json"
+          ]
+        },
+        {
+          "id": "node-release-npm-view-current-version",
+          "prompt": "Using npm, check the currently published version of package @acme/tool.",
+          "answers": [
+            "npm view @acme/tool version --json"
+          ],
+          "explanation": "Confirms registry state before choosing next version.",
+          "command": "npm view",
+          "tested_flags": [
+            "--json"
+          ]
+        },
+        {
+          "id": "node-release-npm-outdated",
+          "prompt": "Using npm, check whether project dependencies are outdated before release.",
+          "answers": [
+            "npm outdated --long"
+          ],
+          "explanation": "Useful preflight signal for dependency hygiene.",
+          "command": "npm outdated",
+          "tested_flags": [
+            "--long"
+          ]
+        },
+        {
+          "id": "node-release-git-tag-verify",
+          "prompt": "Using git, list tags matching v1.2.* before creating a new release tag.",
+          "answers": [
+            "git tag -l \"v1.2.*\""
+          ],
+          "explanation": "Verifies existing tags and prevents accidental duplicates.",
+          "command": "git tag",
+          "tested_flags": [
+            "-l"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "node-release-version-tag-publish",
+      "title": "Version, Tag, and Publish",
+      "order": 2,
+      "cards": [
+        {
+          "id": "node-release-npm-version-prerelease",
+          "prompt": "Using npm, bump prerelease version with prepatch and preid rc.",
+          "answers": [
+            "npm version prepatch --preid rc"
+          ],
+          "explanation": "Creates release-candidate versions such as 1.2.4-rc.0.",
+          "command": "npm version",
+          "tested_flags": [
+            "--preid"
+          ]
+        },
+        {
+          "id": "node-release-npm-version-from-git",
+          "prompt": "Using npm, set package version from latest git tag without creating a new git tag.",
+          "answers": [
+            "npm version from-git --no-git-tag-version"
+          ],
+          "explanation": "Aligns package version to repository tags in controlled pipelines.",
+          "command": "npm version",
+          "tested_flags": [
+            "--no-git-tag-version"
+          ]
+        },
+        {
+          "id": "node-release-git-tag-annotated-signed",
+          "prompt": "Using git, create a signed annotated release tag v1.2.3 with message release 1.2.3.",
+          "answers": [
+            "git tag -s v1.2.3 -m \"release 1.2.3\""
+          ],
+          "explanation": "Signed tags improve provenance and trust in release workflows.",
+          "command": "git tag",
+          "tested_flags": [
+            "-m",
+            "-s"
+          ]
+        },
+        {
+          "id": "node-release-git-push-follow-tags",
+          "prompt": "Using git, push current branch and reachable annotated tags.",
+          "answers": [
+            "git push --follow-tags origin HEAD",
+            "git push origin HEAD --follow-tags"
+          ],
+          "explanation": "--follow-tags pushes annotated tags related to pushed commits.",
+          "command": "git push",
+          "tested_flags": [
+            "--follow-tags"
+          ]
+        },
+        {
+          "id": "node-release-npm-publish-provenance",
+          "prompt": "Using npm, publish package with public access and provenance metadata.",
+          "answers": [
+            "npm publish --access public --provenance",
+            "npm publish --provenance --access public"
+          ],
+          "explanation": "Provenance improves supply-chain trust for published artifacts.",
+          "command": "npm publish",
+          "tested_flags": [
+            "--access",
+            "--provenance"
+          ]
+        },
+        {
+          "id": "node-release-npm-dist-tag-add",
+          "prompt": "Using npm, add dist-tag next to version 1.3.0-rc.0 of package @acme/tool.",
+          "answers": [
+            "npm dist-tag add @acme/tool@1.3.0-rc.0 next"
+          ],
+          "explanation": "Dist-tags control which versions users get by default.",
+          "command": "npm dist-tag",
+          "tested_flags": []
+        },
+        {
+          "id": "node-release-npm-dist-tag-list",
+          "prompt": "Using npm, list all dist-tags for package @acme/tool.",
+          "answers": [
+            "npm dist-tag ls @acme/tool",
+            "npm dist-tag list @acme/tool"
+          ],
+          "explanation": "Verifies active channel mappings like latest and next.",
+          "command": "npm dist-tag",
+          "tested_flags": [
+            "list",
+            "ls"
+          ]
+        },
+        {
+          "id": "node-release-npm-view-latest",
+          "prompt": "Using npm, verify the latest dist-tag target version after publish for @acme/tool.",
+          "answers": [
+            "npm view @acme/tool dist-tags.latest --json"
+          ],
+          "explanation": "Confirms consumers will resolve the intended latest version.",
+          "command": "npm view",
+          "tested_flags": [
+            "--json"
+          ]
+        }
+      ]
+    }
+  ],
+  "content_version": 1
+}

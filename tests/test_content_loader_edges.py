@@ -75,6 +75,8 @@ def test_infer_command_branches() -> None:
     assert content_loader._infer_command("git --version") == "git"
     assert content_loader._infer_command("git status -s") == "git status"
     assert content_loader._infer_command("apt update") == "apt update"
+    assert content_loader._infer_command("npm install -D vitest") == "npm"
+    assert content_loader._infer_command("node --test") == "node"
     assert content_loader._infer_command('"') == ""
 
 
