@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Fixed
+
+- Resuming a started module and completing it no longer leaves the module stuck in "started" state. Previously, if a card's spaced-repetition streak was reset to 0 by a wrong answer during general practice between sessions, the module would never be marked as completed even after all cards were answered correctly on resume.
+
 ## [1.3.0] - 2026-03-01
 
 ### Added

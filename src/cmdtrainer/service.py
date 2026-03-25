@@ -404,10 +404,12 @@ class LearnService:
     def complete_module_if_mastered(self, profile_id: int, module: Module) -> bool:
         """Mark module complete when all cards have at least one correct attempt."""
         all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
-        for card_id in all_card_ids:
-            schedule = self.progress.get_card_schedule(profile_id, card_id)
-            if schedule is None or schedule.seen_count <= 0 or schedule.streak < 1:
-                return False
+        if not all_card_ids:
+            self.progress.mark_module_completed(profile_id, module.id, module.content_version)
+            return True
+        mastered = self.progress.correct_card_ids(profile_id, all_card_ids)
+        if len(mastered) < len(all_card_ids):
+            return False
         self.progress.mark_module_completed(profile_id, module.id, module.content_version)
         return True
 

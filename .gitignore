@@ -35,3 +35,4 @@ dist/
 *.swo
 Thumbs.db
 .DS_Store
+.claude/
