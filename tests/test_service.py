@@ -187,6 +187,27 @@ def test_module_completion_after_resume_with_reset_streak() -> None:
     assert service.complete_module_if_mastered(profile.id, module) is True
 
 
+def test_count_due_cards() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("p2d")
+    assert service.count_due_cards(profile.id) == 0
+
+    module = service.begin_module(profile.id, "base-linux")
+    first_card = module.lessons[0].cards[0]
+    service.record_answer(profile.id, first_card, first_card.answers[0])
+
+    # Backdate the card so it is overdue
+    store = service.progress
+    overdue = (datetime.now(UTC) - timedelta(days=1)).isoformat()
+    with store._conn:  # noqa: SLF001
+        store._conn.execute(  # noqa: SLF001
+            "UPDATE card_progress SET due_at = ? WHERE profile_id = ? AND card_id = ?",
+            (overdue, profile.id, first_card.id),
+        )
+
+    assert service.count_due_cards(profile.id) == 1
+
+
 def test_due_cards_from_completed_then_started_fallback() -> None:
     service = LearnService(":memory:")
     profile = service.create_profile("p3")

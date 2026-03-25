@@ -58,16 +58,16 @@ def test_card_progress_scheduling() -> None:
     assert schedule is not None
     assert schedule.streak == 1
     assert schedule.spacing_score > 0
-    assert schedule.interval_minutes >= 2
+    assert schedule.interval_minutes >= 0
 
     store.record_attempt(profile.id, "card-1", "bad", False)
     schedule = store.get_card_schedule(profile.id, "card-1")
     assert schedule is not None
     assert schedule.streak == 0
     assert schedule.spacing_score >= 0
-    assert schedule.interval_minutes == 2
+    assert schedule.interval_minutes == 0
     assert schedule.seen_count == 2
-    assert datetime.fromisoformat(schedule.due_at) >= datetime.now(UTC).replace(microsecond=0)
+    assert datetime.fromisoformat(schedule.due_at) <= datetime.now(UTC)
 
 
 def test_wrong_answer_is_due_soon_even_after_growth() -> None:
@@ -85,7 +85,7 @@ def test_wrong_answer_is_due_soon_even_after_growth() -> None:
     store.record_attempt(profile.id, "card-a", "bad", False)
     shrunk = store.get_card_schedule(profile.id, "card-a")
     assert shrunk is not None
-    assert shrunk.interval_minutes == 2
+    assert shrunk.interval_minutes == 0
     assert shrunk.spacing_score < grown.spacing_score
 
 

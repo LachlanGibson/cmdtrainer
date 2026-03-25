@@ -33,18 +33,18 @@ When an attempt is recorded:
 
 - `streak = 0`
 - `spacing_score = max(0.0, (prev_score * 0.6) - 0.5)`
-- `interval_minutes = 2`
-- `due_at = now + 2 minutes`
+- `interval_minutes = 0`
+- `due_at = now`
 
-Incorrect answers are intentionally scheduled very soon, regardless of previous score.
+Incorrect answers are immediately due for review, regardless of previous score.
 
 ## Interval Function
 
 `interval_from_score(score)`:
 
 - `minutes = round(10 * (1.7 ** score))`
-- bounded to `[2, 43200]` minutes
-  - minimum: 2 minutes
+- bounded to `[0, 43200]` minutes
+  - minimum: 0 minutes (immediately due)
   - maximum: 30 days
 
 ## Queue Selection (Practice)

@@ -12,10 +12,11 @@ from .service import LearnService
 
 InputFn = Callable[[str], str]
 PrintFn = Callable[[str], None]
-BACK_COMMANDS = {":back", ":b", "back"}
+BACK_COMMANDS = {":back", ":b"}
 MENU_QUIT_COMMANDS = {"q"}
 FLOW_EXIT_COMMANDS = {":quit", ":exit", ":q"}
 MENU_BACK_COMMANDS = {"b"}
+CONTINUE_STOP_COMMANDS = {"b", "q", "back", "quit", "exit", ":b", ":q", ":back", ":quit", ":exit"}
 
 
 class QuitApp(Exception):
@@ -652,35 +653,52 @@ def _general_practice_flow(service: LearnService, profile_id: int, input_fn: Inp
         print_fn("No cards available. Start a module first.")
         return
 
-    print_fn("\n=== General Practice ===")
-    print_fn(f"Cards this round: {len(cards)}")
-    print_fn("Type :b or :q to exit practice.")
-    correct_count = 0
-    attempted_count = 0
-    for card in cards:
-        print_fn(f"\nPrompt: {card.prompt}")
-        user_input = input_fn("Type command (or :show): ").strip()
-        lowered = user_input.lower()
-        if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
-            print_fn(f"\nRound ended early: {correct_count}/{attempted_count} correct")
-            return
-        if lowered == ":show":
-            print_fn(f"Answer: {card.answers[0]}")
-            user_input = input_fn("Now type command: ").strip()
+    while True:
+        print_fn("\n=== General Practice ===")
+        print_fn(f"Cards this round: {len(cards)}")
+        print_fn("Type :b or :q to exit practice.")
+        correct_count = 0
+        attempted_count = 0
+        for card in cards:
+            print_fn(f"\nPrompt: {card.prompt}")
+            user_input = input_fn("Type command (or :show): ").strip()
             lowered = user_input.lower()
             if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
                 print_fn(f"\nRound ended early: {correct_count}/{attempted_count} correct")
                 return
+            if lowered == ":show":
+                print_fn(f"Answer: {card.answers[0]}")
+                user_input = input_fn("Now type command: ").strip()
+                lowered = user_input.lower()
+                if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
+                    print_fn(f"\nRound ended early: {correct_count}/{attempted_count} correct")
+                    return
 
-        correct = service.record_answer(profile_id, card, user_input)
-        attempted_count += 1
-        if correct:
-            correct_count += 1
-            print_fn("Correct.")
+            correct = service.record_answer(profile_id, card, user_input)
+            attempted_count += 1
+            if correct:
+                correct_count += 1
+                print_fn("Correct.")
+            else:
+                print_fn(f"Incorrect. Expected e.g.: {card.answers[0]}")
+
+        print_fn(f"\nRound complete: {correct_count}/{len(cards)} correct")
+
+        due_count = service.count_due_cards(profile_id)
+        if due_count > 0:
+            prompt = (
+                f"{due_count} more card{'s' if due_count != 1 else ''} due — press Enter to continue or b/q to stop: "
+            )
         else:
-            print_fn(f"Incorrect. Expected e.g.: {card.answers[0]}")
+            next_cards = service.due_cards(profile_id, limit=1)
+            if not next_cards:
+                return
+            prompt = "No more cards due — press Enter to practice ahead or b/q to stop: "
 
-    print_fn(f"\nRound complete: {correct_count}/{len(cards)} correct")
+        if input_fn(prompt).strip().lower() in CONTINUE_STOP_COMMANDS:
+            return
+
+        cards = service.due_cards(profile_id, limit=10)
 
 
 def main_entry() -> None:
