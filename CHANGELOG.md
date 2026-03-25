@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-25
+
 ### Changed
 
 - General practice no longer stops at a hard limit of 10 cards. After each 10-card round, if more cards are due the user is prompted with the remaining due count and can continue or stop (b/q). If no cards are due but the queue has future cards, the user is offered the option to practice ahead of schedule.
