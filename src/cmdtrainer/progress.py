@@ -548,8 +548,8 @@ class ProgressStore:
         else:
             streak = 0
             spacing_score = max(0.0, (prev_score * 0.6) - 0.5)
-            interval_minutes = 2
-            due = now + timedelta(minutes=2)
+            interval_minutes = 0
+            due = now
 
         with self._conn:
             if self._card_progress_has_interval_days:
@@ -644,4 +644,4 @@ class ProgressStore:
 def _interval_from_score(score: float) -> int:
     """Convert spacing score to interval minutes using bounded exponential growth."""
     minutes = int(round(10 * (1.7**score)))
-    return max(2, min(minutes, 60 * 24 * 30))
+    return max(0, min(minutes, 60 * 24 * 30))

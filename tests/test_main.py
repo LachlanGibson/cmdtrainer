@@ -1,5 +1,7 @@
 ﻿from typing import Any
 
+import pytest
+
 import cmdtrainer.main as main
 
 
@@ -15,6 +17,7 @@ class DummyService:
         self.closed = False
         self._profiles: list[DummyProfile] = []
         self.correct_ids_by_module: dict[str, set[str]] = {}
+        self._due_cards_calls = 0
 
     def close(self) -> None:
         self.closed = True
@@ -58,7 +61,13 @@ class DummyService:
     def complete_module_if_mastered(self, profile_id: int, module: object) -> bool:
         return True
 
+    def count_due_cards(self, profile_id: int) -> int:
+        return 0
+
     def due_cards(self, profile_id: int, limit: int = 10) -> list[object]:
+        self._due_cards_calls += 1
+        if self._due_cards_calls > 1:
+            return []
         card = type("Card", (), {"id": "c", "prompt": "p", "answers": ["pwd"], "explanation": ""})()
         return [card]
 
@@ -344,6 +353,14 @@ def test_general_practice_flow_quit_early_alias() -> None:
     outputs: list[str] = []
     main._general_practice_flow(service, 1, lambda _: ":q", outputs.append)
     assert any("Round ended early" in line for line in outputs)
+
+
+def test_general_practice_bare_back_is_not_exit_command() -> None:
+    """'back' without a colon must be treated as an incorrect answer, not an exit command."""
+    outputs: list[str] = []
+    main._general_practice_flow(DummyService(), 1, lambda _: "back", outputs.append)
+    assert any("Incorrect" in line for line in outputs)
+    assert not any("Round ended early" in line for line in outputs)
 
 
 def test_general_practice_no_cards() -> None:
@@ -710,6 +727,105 @@ def test_general_practice_incorrect_and_show_exit() -> None:
     inputs = iter([":show", ":exit"])
     main._general_practice_flow(DummyService(), 1, lambda _: next(inputs), outputs.append)
     assert any("Round ended early" in line for line in outputs)
+
+
+def test_general_practice_continue_prompt_due_cards() -> None:
+    """Continue prompt shows due count and loops when Enter pressed, stops on q."""
+
+    class MultiRoundService(DummyService):
+        def __init__(self) -> None:
+            super().__init__()
+            self._round = 0
+
+        def count_due_cards(self, profile_id: int) -> int:
+            return 3
+
+        def due_cards(self, profile_id: int, limit: int = 10) -> list[object]:
+            self._round += 1
+            card = type("Card", (), {"id": f"c{self._round}", "prompt": "p", "answers": ["pwd"], "explanation": ""})()
+            return [card]
+
+    outputs: list[str] = []
+    input_prompts: list[str] = []
+    answers = iter(["pwd", "", "pwd", "q"])
+
+    def capture_input(prompt: str) -> str:
+        input_prompts.append(prompt)
+        return next(answers)
+
+    main._general_practice_flow(MultiRoundService(), 1, capture_input, outputs.append)
+    assert any("3 more cards due" in p and "b/q" in p for p in input_prompts)
+    assert sum(1 for line in outputs if "Round complete" in line) == 2
+
+
+def test_general_practice_continue_prompt_future_only() -> None:
+    """Continue prompt shows 'no more due' message when only future cards remain."""
+
+    class FutureService(DummyService):
+        def __init__(self) -> None:
+            super().__init__()
+            self._round = 0
+
+        def count_due_cards(self, profile_id: int) -> int:
+            return 0
+
+        def due_cards(self, profile_id: int, limit: int = 10) -> list[object]:
+            self._round += 1
+            if self._round > 2:
+                return []
+            card = type("Card", (), {"id": f"c{self._round}", "prompt": "p", "answers": ["pwd"], "explanation": ""})()
+            return [card]
+
+    outputs: list[str] = []
+    input_prompts: list[str] = []
+    answers = iter(["pwd", "b"])
+
+    def capture_input(prompt: str) -> str:
+        input_prompts.append(prompt)
+        return next(answers)
+
+    main._general_practice_flow(FutureService(), 1, capture_input, outputs.append)
+    assert any("No more cards due" in p and "b/q" in p for p in input_prompts)
+
+
+@pytest.mark.parametrize(  # type: ignore[misc]
+    "stop_input",
+    ["b", "q", "back", "quit", "exit", ":b", ":q", ":back", ":quit", ":exit"],
+)
+def test_general_practice_continue_stop_commands(stop_input: str) -> None:
+    """All CONTINUE_STOP_COMMANDS variants must stop practice at the continue prompt."""
+
+    class InfiniteService(DummyService):
+        def __init__(self) -> None:
+            super().__init__()
+            self._round = 0
+
+        def count_due_cards(self, profile_id: int) -> int:
+            return 1
+
+        def due_cards(self, profile_id: int, limit: int = 10) -> list[object]:
+            self._round += 1
+            card = type("Card", (), {"id": f"c{self._round}", "prompt": "p", "answers": ["pwd"], "explanation": ""})()
+            return [card]
+
+    outputs: list[str] = []
+    answers = iter(["pwd", stop_input])
+    main._general_practice_flow(InfiniteService(), 1, lambda _: next(answers), outputs.append)
+    assert sum(1 for line in outputs if "Round complete" in line) == 1
+
+
+def test_general_practice_no_continue_prompt_when_queue_empty() -> None:
+    """No continue prompt is shown when the queue is exhausted after a round."""
+    outputs: list[str] = []
+    input_prompts: list[str] = []
+
+    def capture_input(prompt: str) -> str:
+        input_prompts.append(prompt)
+        return "pwd"
+
+    main._general_practice_flow(DummyService(), 1, capture_input, outputs.append)
+    assert any("Round complete" in line for line in outputs)
+    assert not any("press Enter" in p for p in input_prompts)
 
 
 def test_main_entry_exits(monkeypatch: Any) -> None:

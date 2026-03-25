@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Changed
+
+- General practice no longer stops at a hard limit of 10 cards. After each 10-card round, if more cards are due the user is prompted with the remaining due count and can continue or stop (b/q). If no cards are due but the queue has future cards, the user is offered the option to practice ahead of schedule.
+- Bare `back` (without a leading colon) is no longer accepted as an exit command during practice; a colon prefix (`:b`, `:back`, `:q`, `:quit`) is required to distinguish control commands from typed answers.
+- Incorrect answers now schedule cards as immediately due (interval 0) instead of after a 2-minute delay, so they always reappear in the next practice batch.
+
 ### Fixed
 
 - Resuming a started module and completing it no longer leaves the module stuck in "started" state. Previously, if a card's spaced-repetition streak was reset to 0 by a wrong answer during general practice between sessions, the module would never be marked as completed even after all cards were answered correctly on resume.

@@ -413,15 +413,13 @@ class LearnService:
         self.progress.mark_module_completed(profile_id, module.id, module.content_version)
         return True
 
-    def due_cards(self, profile_id: int, limit: int = 10) -> list[Card]:
-        """Return randomized due cards for spaced-repetition practice."""
+    def _collect_queue(self, profile_id: int) -> tuple[list[Card], list[tuple[datetime, Card]]]:
+        """Collect all eligible cards split into due and not-yet-due lists."""
         eligible_modules = self.progress.completed_module_ids(profile_id)
         if not eligible_modules:
             eligible_modules = self.progress.started_module_ids(profile_id)
-
         if not eligible_modules:
-            return []
-
+            return [], []
         now = datetime.now(UTC)
         due: list[Card] = []
         future: list[tuple[datetime, Card]] = []
@@ -444,6 +442,16 @@ class LearnService:
                         due.append(card)
                     else:
                         future.append((due_at, card))
+        return due, future
+
+    def count_due_cards(self, profile_id: int) -> int:
+        """Return the number of cards currently due for spaced-repetition practice."""
+        due, _ = self._collect_queue(profile_id)
+        return len(due)
+
+    def due_cards(self, profile_id: int, limit: int = 10) -> list[Card]:
+        """Return randomized due cards for spaced-repetition practice."""
+        due, future = self._collect_queue(profile_id)
 
         random.shuffle(due)
         if due:
@@ -452,6 +460,8 @@ class LearnService:
             self._remember_last_presented(profile_id, selected)
             return selected
 
+        if not future:
+            return []
         future.sort(key=lambda item: item[0])
         ordered_future = self._avoid_immediate_repeat(profile_id, [item[1] for item in future])
         selected = ordered_future[:limit]
