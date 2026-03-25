@@ -160,6 +160,33 @@ def test_module_completion_false_when_missing_cards() -> None:
     assert service.complete_module_if_mastered(profile.id, module) is False
 
 
+def test_module_completion_after_resume_with_reset_streak() -> None:
+    """Regression: completing a resumed module must succeed even if card streaks
+    were reset to 0 by wrong answers in general practice between sessions."""
+    service = LearnService(":memory:")
+    profile = service.create_profile("p2c")
+    module = service.begin_module(profile.id, "base-linux")
+
+    all_cards = [card for lesson in module.lessons for card in lesson.cards]
+
+    # Session 1: answer all cards correctly (streak becomes 1 for each)
+    for card in all_cards:
+        service.record_answer(profile.id, card, card.answers[0])
+
+    # Simulate general practice resetting streaks to 0 for all cards
+    for card in all_cards:
+        service.record_answer(profile.id, card, "wrong_answer")
+
+    # All streaks are now 0, but each card has a correct attempt in history
+    for card in all_cards:
+        schedule = service.progress.get_card_schedule(profile.id, card.id)
+        assert schedule is not None
+        assert schedule.streak == 0
+
+    # Resume: completion should still succeed because all cards were correctly answered
+    assert service.complete_module_if_mastered(profile.id, module) is True
+
+
 def test_due_cards_from_completed_then_started_fallback() -> None:
     service = LearnService(":memory:")
     profile = service.create_profile("p3")
