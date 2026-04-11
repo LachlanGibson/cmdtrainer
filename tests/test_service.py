@@ -81,6 +81,31 @@ def test_force_unlock_module_with_dependencies() -> None:
     assert states["docker-context"].completed is True
 
 
+def test_force_unlock_seeds_cards_into_practice_queue() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-force-queue")
+    service.force_unlock_module_with_dependencies(profile.id, "base-linux")
+    due = service.due_cards(profile.id, limit=50)
+    assert len(due) > 0, "Force-unlocked module cards must appear in the practice queue"
+
+
+def test_force_unlock_does_not_reseed_already_correct_cards() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-force-noseed")
+    module = service.begin_module(profile.id, "base-linux")
+    first_card = module.lessons[0].cards[0]
+    service.record_answer(profile.id, first_card, first_card.answers[0])
+    schedule_before = service.progress.get_card_schedule(profile.id, first_card.id)
+    assert schedule_before is not None
+
+    service.force_unlock_module_with_dependencies(profile.id, "base-linux")
+    schedule_after = service.progress.get_card_schedule(profile.id, first_card.id)
+    assert schedule_after is not None
+    assert schedule_after.seen_count == schedule_before.seen_count, (
+        "Force unlock must not add extra attempts for cards already answered correctly"
+    )
+
+
 def test_get_module_missing() -> None:
     service = LearnService(":memory:")
     assert service.get_module("missing") is None
@@ -234,6 +259,29 @@ def test_due_cards_from_completed_then_started_fallback() -> None:
 
     due = service.due_cards(profile.id, limit=5)
     assert any(card.id == first_card.id for card in due)
+
+
+def test_due_cards_includes_started_module_cards_when_another_module_is_completed() -> None:
+    """Regression: cards from a started-but-not-completed module must appear in practice
+    even when another module has been fully completed."""
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-partial-regression")
+
+    # Complete base-linux fully
+    base = service.begin_module(profile.id, "base-linux")
+    for lesson in base.lessons:
+        for card in lesson.cards:
+            service.record_answer(profile.id, card, card.answers[0])
+    service.complete_module_if_mastered(profile.id, base)
+
+    # Start git but only answer the first card correctly
+    git = service.begin_module(profile.id, "git")
+    partial_card = git.lessons[0].cards[0]
+    service.record_answer(profile.id, partial_card, partial_card.answers[0])
+
+    due = service.due_cards(profile.id, limit=50)
+    due_ids = {card.id for card in due}
+    assert partial_card.id in due_ids, "Card from started-but-not-completed module must appear in practice"
 
 
 def test_due_cards_empty_without_started_modules() -> None:

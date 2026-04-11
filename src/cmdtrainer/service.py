@@ -325,13 +325,18 @@ class LearnService:
         for item in order:
             self.progress.mark_module_started(profile_id, item)
             self.progress.mark_module_completed(profile_id, item, self.modules[item].content_version)
+            module = self.modules[item]
+            all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+            already_correct = self.progress.correct_card_ids(profile_id, all_card_ids)
+            for lesson in module.lessons:
+                for card in lesson.cards:
+                    if card.id not in already_correct:
+                        self.progress.record_attempt(profile_id, card.id, card.answers[0], True)
         return order
 
     def practice_queue(self, profile_id: int, limit: int = 30) -> list[QueueItem]:
         """Return upcoming practice queue for eligible modules."""
-        eligible_modules = self.progress.completed_module_ids(profile_id)
-        if not eligible_modules:
-            eligible_modules = self.progress.started_module_ids(profile_id)
+        eligible_modules = self.progress.started_module_ids(profile_id)
         if not eligible_modules:
             return []
 
@@ -415,9 +420,7 @@ class LearnService:
 
     def _collect_queue(self, profile_id: int) -> tuple[list[Card], list[tuple[datetime, Card]]]:
         """Collect all eligible cards split into due and not-yet-due lists."""
-        eligible_modules = self.progress.completed_module_ids(profile_id)
-        if not eligible_modules:
-            eligible_modules = self.progress.started_module_ids(profile_id)
+        eligible_modules = self.progress.started_module_ids(profile_id)
         if not eligible_modules:
             return [], []
         now = datetime.now(UTC)

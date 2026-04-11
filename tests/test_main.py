@@ -828,6 +828,18 @@ def test_general_practice_no_continue_prompt_when_queue_empty() -> None:
     assert not any("press Enter" in p for p in input_prompts)
 
 
+def test_format_interval_boundaries() -> None:
+    assert main._format_interval(0) == "-"
+    assert main._format_interval(-5) == "-"
+    assert main._format_interval(1) == "1m"
+    assert main._format_interval(119) == "119m"
+    assert main._format_interval(120) == "2.0h"
+    assert main._format_interval(90) == "90m"
+    assert main._format_interval(1440) == "24.0h"
+    assert main._format_interval(2879) == "48.0h"
+    assert main._format_interval(2880) == "2.0d"
+
+
 def test_main_entry_exits(monkeypatch: Any) -> None:
     monkeypatch.setattr(main, "run", lambda argv=None: 0)
     try:

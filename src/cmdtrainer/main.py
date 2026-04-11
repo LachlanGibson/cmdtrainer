@@ -521,7 +521,7 @@ def _queue_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> No
     print_fn("-" * len(header))
     for item in queue:
         local_due = _format_local_due(item.due_at)
-        interval_label = f"{item.interval_minutes}m" if item.interval_minutes > 0 else "-"
+        interval_label = _format_interval(item.interval_minutes)
         print_fn(
             f"{local_due:<{due_width}} "
             f"{item.streak:>{streak_width}} "
@@ -567,6 +567,19 @@ def _import_profile_flow(service: LearnService, input_fn: InputFn, print_fn: Pri
     print_fn(f"- module rows: {summary.module_rows}")
     print_fn(f"- card rows: {summary.card_rows}")
     print_fn(f"- attempt rows: {summary.attempt_rows}")
+
+
+def _format_interval(minutes: int) -> str:
+    """Format an interval in minutes as a human-readable string using appropriate units."""
+    if minutes <= 0:
+        return "-"
+    if minutes < 2 * 60:
+        return f"{minutes}m"
+    if minutes < 2 * 1440:
+        hours = minutes / 60
+        return f"{hours:.1f}h"
+    days = minutes / 1440
+    return f"{days:.1f}d"
 
 
 def _format_local_due(due_at: str) -> str:

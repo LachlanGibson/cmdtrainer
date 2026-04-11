@@ -6,6 +6,17 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-04-12
+
+### Changed
+
+- Practice schedule queue (Admin menu) now displays intervals in human-readable units: minutes below 2 hours, hours below 2 days, days otherwise.
+
+### Fixed
+
+- General practice now includes cards from started-but-not-completed modules even when another module has been fully completed. Previously, once any module was completed, in-progress modules were excluded from the practice queue entirely.
+- Force-unlocking a module via the Admin menu now seeds all its cards into the practice queue. Previously, force-unlocked modules were marked complete but had no attempts recorded, so none of their cards ever appeared in general practice.
+
 ## [1.4.0] - 2026-03-25
 
 ### Changed
