@@ -6,6 +6,16 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-12
+
+### Changed
+
+- All navigation menus now respond to a single keypress without requiring Enter. Options are displayed as `[key] Label` to make the expected input mode immediately clear.
+- Dynamic module and profile lists paginate at 9 items per page. `[n]`/`[p]` navigate next/previous pages consistently across all lists. Creating a new profile uses `[c]` (create) to free up `[n]` for pagination.
+- Confirmation and continue prompts (resume/restart, grouped-outdated start, practice-round continue) now also use single-keypress. Any key except `[b]` or `[q]` proceeds; there is no longer an Enter requirement.
+- Exit commands during card answer typing now require a colon prefix (`:b`, `:back`, `:q`, `:quit`, `:exit`). Plain words like `back` or `quit` are treated as incorrect answers, consistent with the existing v1.4.0 policy.
+- Invalid keypresses on navigation menus are silently ignored and the menu re-renders, replacing the previous "Invalid choice." message.
+
 ## [1.4.1] - 2026-04-12
 
 ### Changed
