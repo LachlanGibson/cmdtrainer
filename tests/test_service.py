@@ -101,9 +101,9 @@ def test_force_unlock_does_not_reseed_already_correct_cards() -> None:
     service.force_unlock_module_with_dependencies(profile.id, "base-linux")
     schedule_after = service.progress.get_card_schedule(profile.id, first_card.id)
     assert schedule_after is not None
-    assert schedule_after.seen_count == schedule_before.seen_count, (
-        "Force unlock must not add extra attempts for cards already answered correctly"
-    )
+    assert (
+        schedule_after.seen_count == schedule_before.seen_count
+    ), "Force unlock must not add extra attempts for cards already answered correctly"
 
 
 def test_get_module_missing() -> None:

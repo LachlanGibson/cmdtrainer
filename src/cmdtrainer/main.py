@@ -1,4 +1,4 @@
-﻿"""CLI entrypoint for command flashcard learning app."""
+"""CLI entrypoint for command flashcard learning app."""
 
 from __future__ import annotations
 
@@ -7,26 +7,89 @@ from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 
+from .input_reader import InputReader, TerminalInputReader
 from .models import Card, Module
 from .service import LearnService
 
-InputFn = Callable[[str], str]
 PrintFn = Callable[[str], None]
-BACK_COMMANDS = {":back", ":b"}
-MENU_QUIT_COMMANDS = {"q"}
-FLOW_EXIT_COMMANDS = {":quit", ":exit", ":q"}
-MENU_BACK_COMMANDS = {"b"}
-CONTINUE_STOP_COMMANDS = {"b", "q", "back", "quit", "exit", ":b", ":q", ":back", ":quit", ":exit"}
+
+# ── Key constants ──────────────────────────────────────────────────────────────
+KEY_BACK = "b"
+KEY_QUIT = "q"
+KEY_NEXT = "n"
+KEY_PREV = "p"
+
+# Only used during card-answer readline input (multi-char commands are possible).
+CARD_EXIT_COMMANDS = {":back", ":b", ":quit", ":exit", ":q"}
 
 
 class QuitApp(Exception):
     """Signal immediate app exit from nested menu flows."""
 
 
-def _service() -> LearnService:
+# ── Infrastructure ─────────────────────────────────────────────────────────────
+
+
+def _service() -> LearnService:  # pragma: no cover
     """Create app service with local database path."""
     db_path = Path(".cmdtrainer") / "progress.db"
     return LearnService(db_path=db_path)
+
+
+def _row(key: str, label: str) -> str:
+    """Format a single instant-key option row."""
+    return f"  [{key}] {label}"
+
+
+def _paginated_select[T](
+    items: list[T],
+    reader: InputReader,
+    print_fn: PrintFn,
+    *,
+    format_fn: Callable[[T], str],
+    page_size: int = 9,
+) -> T | None:
+    """Single-keypress selection from a numbered list with optional pagination.
+
+    Returns the selected item, or *None* on back.  Raises *QuitApp* on quit.
+    Invalid keys are silently ignored and the page is re-rendered.
+    """
+    page = 0
+    while True:
+        total_pages = max(1, (len(items) + page_size - 1) // page_size)
+        page = min(page, total_pages - 1)
+        start = page * page_size
+        page_items = items[start : start + page_size]
+
+        if total_pages > 1:
+            print_fn(f"  (Page {page + 1}/{total_pages})")
+        for i, item in enumerate(page_items, 1):
+            print_fn(_row(str(i), format_fn(item)))
+
+        footer: list[str] = []
+        if total_pages > 1 and page > 0:
+            footer.append(f"[{KEY_PREV}] Prev")
+        if total_pages > 1 and page < total_pages - 1:
+            footer.append(f"[{KEY_NEXT}] Next")
+        footer.extend([f"[{KEY_BACK}] Back", f"[{KEY_QUIT}] Quit"])
+        print_fn("  " + "   ".join(footer))
+
+        key = reader.readkey("")
+        if key == KEY_BACK:
+            return None
+        if key == KEY_QUIT:
+            raise QuitApp()
+        if key == KEY_NEXT and page < total_pages - 1:
+            page += 1
+        elif key == KEY_PREV and page > 0:
+            page -= 1
+        elif key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(page_items):
+                return page_items[index]
+
+
+# ── Entry points ───────────────────────────────────────────────────────────────
 
 
 def run(argv: list[str] | None = None) -> int:
@@ -37,11 +100,12 @@ def run(argv: list[str] | None = None) -> int:
     return play_shell()
 
 
-def play_shell(input_fn: InputFn = input, print_fn: PrintFn = print) -> int:
+def play_shell(reader: InputReader | None = None, print_fn: PrintFn = print) -> int:
     """Run persistent menu-driven shell."""
+    _reader: InputReader = reader if reader is not None else TerminalInputReader()
     service = _service()
     try:
-        selected = _select_profile(service, input_fn, print_fn, allow_cancel=False)
+        selected = _select_profile(service, _reader, print_fn, allow_cancel=False)
         if selected is None:
             return 0
         profile_id, profile_name = selected
@@ -49,59 +113,79 @@ def play_shell(input_fn: InputFn = input, print_fn: PrintFn = print) -> int:
             while True:
                 print_fn("\n=== Command Practice ===")
                 print_fn(f"Profile: {profile_name}")
-                print_fn("1) Learn a module")
-                print_fn("2) General practice")
-                print_fn("3) Status")
-                print_fn("4) Admin")
-                print_fn("b) Back")
-                print_fn("q) Quit")
-                choice = input_fn("Choose: ").strip().lower()
+                print_fn(_row("1", "Learn a module"))
+                print_fn(_row("2", "General practice"))
+                print_fn(_row("3", "Status"))
+                print_fn(_row("4", "Admin"))
+                print_fn("  [b] Switch profile   [q] Quit")
+                choice = _reader.readkey("")
 
                 if choice == "1":
-                    _learn_module_flow(service, profile_id, input_fn, print_fn)
+                    _learn_module_flow(service, profile_id, _reader, print_fn)
                 elif choice == "2":
-                    _general_practice_flow(service, profile_id, input_fn, print_fn)
+                    _general_practice_flow(service, profile_id, _reader, print_fn)
                 elif choice == "3":
                     _status_flow(service, profile_id, print_fn)
                 elif choice == "4":
-                    _admin_flow(service, profile_id, input_fn, print_fn)
-                elif choice in MENU_BACK_COMMANDS:
-                    switched = _select_profile(service, input_fn, print_fn, allow_cancel=True)
+                    _admin_flow(service, profile_id, _reader, print_fn)
+                elif choice == KEY_BACK:
+                    switched = _select_profile(service, _reader, print_fn, allow_cancel=True)
                     if switched is None:
                         return 0
                     profile_id, profile_name = switched
-                elif choice in MENU_QUIT_COMMANDS:
+                elif choice == KEY_QUIT:
                     return 0
-                else:
-                    print_fn("Invalid choice.")
         except QuitApp:
             return 0
     finally:
         service.close()
 
 
+# ── Profile flows ──────────────────────────────────────────────────────────────
+
+
 def _select_profile(
-    service: LearnService, input_fn: InputFn, print_fn: PrintFn, *, allow_cancel: bool
+    service: LearnService, reader: InputReader, print_fn: PrintFn, *, allow_cancel: bool
 ) -> tuple[int, str] | None:
-    """Select existing profile or create new one."""
+    """Select existing profile or create a new one."""
+    page = 0
+    page_size = 9
     while True:
         profiles = service.list_profiles()
-        print_fn("\n=== Profiles ===")
-        if profiles:
-            for idx, profile in enumerate(profiles, start=1):
-                print_fn(f"{idx}) {profile.name}")
-        else:
-            print_fn("No profiles yet.")
-        print_fn("n) New profile")
-        print_fn("i) Import profile from file")
-        print_fn("d) Delete profile")
-        print_fn("q) Quit")
+        total_pages = max(1, (len(profiles) + page_size - 1) // page_size)
+        page = min(page, total_pages - 1)
+        start = page * page_size
+        page_profiles = profiles[start : start + page_size]
 
-        choice = input_fn("Select profile: ").strip().lower()
-        if choice in MENU_QUIT_COMMANDS:
+        print_fn("\n=== Profiles ===")
+        if total_pages > 1:
+            print_fn(f"  (Page {page + 1}/{total_pages})")
+        if page_profiles:
+            for i, profile in enumerate(page_profiles, 1):
+                print_fn(_row(str(i), profile.name))
+        else:
+            print_fn("  No profiles yet.")
+
+        footer: list[str] = []
+        if total_pages > 1 and page > 0:
+            footer.append(f"[{KEY_PREV}] Prev")
+        if total_pages > 1 and page < total_pages - 1:
+            footer.append(f"[{KEY_NEXT}] Next")
+        footer.extend(["[c] Create new", "[i] Import", "[d] Delete", "[q] Quit"])
+        print_fn("  " + "   ".join(footer))
+
+        key = reader.readkey("")
+
+        if key == KEY_QUIT:
             return None
-        if choice == "n":
-            name = input_fn("New profile name: ").strip()
+        if key == KEY_NEXT and total_pages > 1 and page < total_pages - 1:
+            page += 1
+            continue
+        if key == KEY_PREV and total_pages > 1 and page > 0:
+            page -= 1
+            continue
+        if key == "c":
+            name = reader.readline("New profile name: ").strip()
             if not name:
                 print_fn("Profile name is required.")
                 continue
@@ -111,23 +195,20 @@ def _select_profile(
                 print_fn("Could not create profile (name may already exist).")
                 continue
             return (created.id, created.name)
-        if choice == "d":
-            _delete_profile_flow(service, input_fn, print_fn)
+        if key == "d":
+            _delete_profile_flow(service, reader, print_fn)
             continue
-        if choice == "i":
-            _import_profile_flow(service, input_fn, print_fn)
+        if key == "i":
+            _import_profile_flow(service, reader, print_fn)
             continue
-
-        if choice.isdigit():
-            index = int(choice) - 1
-            if 0 <= index < len(profiles):
-                selected = profiles[index]
+        if key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(page_profiles):
+                selected = page_profiles[index]
                 return (selected.id, selected.name)
 
-        print_fn("Invalid profile selection.")
 
-
-def _delete_profile_flow(service: LearnService, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _delete_profile_flow(service: LearnService, reader: InputReader, print_fn: PrintFn) -> None:
     """Delete a profile with explicit confirmation safeguard."""
     profiles = service.list_profiles()
     if not profiles:
@@ -135,36 +216,32 @@ def _delete_profile_flow(service: LearnService, input_fn: InputFn, print_fn: Pri
         return
 
     print_fn("\nDelete profile")
-    for idx, profile in enumerate(profiles, start=1):
-        print_fn(f"{idx}) {profile.name}")
-    print_fn("b) Back")
-    choice = input_fn("Choose profile to delete: ").strip().lower()
-    if choice in MENU_BACK_COMMANDS:
-        return
-    if not choice.isdigit():
-        print_fn("Invalid choice.")
-        return
-
-    index = int(choice) - 1
-    if not (0 <= index < len(profiles)):
-        print_fn("Invalid choice.")
+    selected = _paginated_select(
+        profiles,
+        reader,
+        print_fn,
+        format_fn=lambda p: p.name,
+    )
+    if selected is None:
         return
 
-    target = profiles[index]
     warning = (
-        f"WARNING: This permanently deletes profile '{target.name}' and all progress "
+        f"WARNING: This permanently deletes profile '{selected.name}' and all progress "
         "(attempts, schedules, module state)."
     )
     print_fn(warning)
-    confirm = input_fn("Type YES to confirm deletion: ").strip()
+    confirm = reader.readline("Type YES to confirm deletion: ").strip()
     if confirm != "YES":
         print_fn("Deletion cancelled.")
         return
-    deleted = service.delete_profile(target.id)
+    deleted = service.delete_profile(selected.id)
     if deleted:
-        print_fn(f"Deleted profile '{target.name}'.")
+        print_fn(f"Deleted profile '{selected.name}'.")
     else:
         print_fn("Profile was not found.")
+
+
+# ── Status flow (read-only, no input) ──────────────────────────────────────────
 
 
 def _status_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> None:
@@ -212,7 +289,10 @@ def _status_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> N
         )
 
 
-def _learn_module_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+# ── Learn flows ────────────────────────────────────────────────────────────────
+
+
+def _learn_module_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Run guided learning flow for one module, with grouped outdated shortcut."""
     all_states = service.list_module_states(profile_id)
     states = [state for state in all_states if state.unlocked]
@@ -220,77 +300,101 @@ def _learn_module_flow(service: LearnService, profile_id: int, input_fn: InputFn
         print_fn("No unlocked modules available yet.")
         return
 
-    print_fn("\n=== Learn Module ===")
-    id_width = max(9, max(len(state.module.id) for state in all_states))
-    status_width = 9
-    prereq_width = max(
-        12,
-        max(
-            len(", ".join(state.module.prerequisites) if state.module.prerequisites else "none") for state in all_states
-        ),
-    )
-    header = f"{'#':>2} {'Module':<{id_width}} {'Status':<{status_width}} {'Prerequisites':<{prereq_width}} Title"
-    print_fn(header)
-    print_fn("-" * len(header))
-    completed_ids = {state.module.id for state in all_states if state.completed}
-    for idx, state in enumerate(states, start=1):
-        status = (
-            "outdated"
-            if state.outdated
-            else ("completed" if state.completed else ("started" if state.started else "new"))
-        )
-        prerequisites = ", ".join(state.module.prerequisites) if state.module.prerequisites else "none"
-        row = (
-            f"{idx:>2} "
-            f"{state.module.id:<{id_width}} "
-            f"{status:<{status_width}} "
-            f"{prerequisites:<{prereq_width}} "
-            f"{state.module.title}"
-        )
-        print_fn(row)
+    page = 0
+    page_size = 9
 
-    locked_states = [state for state in all_states if not state.unlocked]
-    if locked_states:
-        print_fn("\nLocked Modules")
-        locked_header = f"{'Module':<{id_width}} Missing prerequisites"
-        print_fn(locked_header)
-        print_fn("-" * len(locked_header))
-    for state in all_states:
-        if state.unlocked:
+    while True:
+        total_pages = max(1, (len(states) + page_size - 1) // page_size)
+        page = min(page, total_pages - 1)
+        start = page * page_size
+        page_states = states[start : start + page_size]
+
+        print_fn("\n=== Learn Module ===")
+
+        id_width = max(9, max(len(state.module.id) for state in all_states))
+        status_width = 9
+        prereq_width = max(
+            12,
+            max(
+                len(", ".join(state.module.prerequisites) if state.module.prerequisites else "none")
+                for state in all_states
+            ),
+        )
+        if total_pages > 1:
+            print_fn(f"  (Page {page + 1}/{total_pages})")
+        header = f"{'#':>2} {'Module':<{id_width}} {'Status':<{status_width}} {'Prerequisites':<{prereq_width}} Title"
+        print_fn(header)
+        print_fn("-" * len(header))
+        completed_ids = {state.module.id for state in all_states if state.completed}
+        for idx, state in enumerate(page_states, start=start + 1):
+            status = (
+                "outdated"
+                if state.outdated
+                else ("completed" if state.completed else ("started" if state.started else "new"))
+            )
+            prerequisites = ", ".join(state.module.prerequisites) if state.module.prerequisites else "none"
+            print_fn(
+                f"{idx:>2} "
+                f"{state.module.id:<{id_width}} "
+                f"{status:<{status_width}} "
+                f"{prerequisites:<{prereq_width}} "
+                f"{state.module.title}"
+            )
+
+        locked_states = [state for state in all_states if not state.unlocked]
+        if locked_states:
+            print_fn("\nLocked Modules")
+            locked_header = f"{'Module':<{id_width}} Missing prerequisites"
+            print_fn(locked_header)
+            print_fn("-" * len(locked_header))
+            for state in all_states:
+                if state.unlocked:
+                    continue
+                missing = [dep for dep in state.module.prerequisites if dep not in completed_ids]
+                print_fn(f"{state.module.id:<{id_width}} {', '.join(missing)}")
+
+        has_outdated = any(s.outdated for s in all_states if s.unlocked)
+        footer: list[str] = []
+        if has_outdated:
+            footer.append("[g] Grouped outdated")
+        if total_pages > 1 and page > 0:
+            footer.append(f"[{KEY_PREV}] Prev")
+        if total_pages > 1 and page < total_pages - 1:
+            footer.append(f"[{KEY_NEXT}] Next")
+        footer.extend([f"[{KEY_BACK}] Back", f"[{KEY_QUIT}] Quit"])
+        print_fn("  " + "   ".join(footer))
+
+        key = reader.readkey("")
+
+        if key == "g":
+            _learn_outdated_modules_flow(service, profile_id, reader, print_fn)
+            return
+        if key == KEY_BACK:
+            return
+        if key == KEY_QUIT:
+            raise QuitApp()
+        if key == KEY_NEXT and page < total_pages - 1:
+            page += 1
             continue
-        missing = [dep for dep in state.module.prerequisites if dep not in completed_ids]
-        print_fn(f"{state.module.id:<{id_width}} {', '.join(missing)}")
-
-    print_fn("g) Grouped outdated modules")
-    print_fn("b) Back")
-    print_fn("q) Quit")
-    choice = input_fn("Choose module: ").strip().lower()
-    if choice == "g":
-        _learn_outdated_modules_flow(service, profile_id, input_fn, print_fn)
-        return
-    if choice in MENU_BACK_COMMANDS:
-        return
-    if choice in MENU_QUIT_COMMANDS:
-        raise QuitApp()
-    if not choice.isdigit():
-        print_fn("Invalid choice.")
-        return
-
-    index = int(choice) - 1
-    if not (0 <= index < len(states)):
-        print_fn("Invalid choice.")
-        return
-
-    selected_state = states[index]
-    module = service.begin_module(profile_id, selected_state.module.id)
-    restart = False
-    if selected_state.started:
-        mode = input_fn("Press Enter to resume or type r to restart: ").strip().lower()
-        restart = mode == "r"
-    _run_guided_module(service, profile_id, module, input_fn, print_fn, restart=restart)
+        if key == KEY_PREV and page > 0:
+            page -= 1
+            continue
+        if key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(page_states):
+                selected_state = page_states[index]
+                module = service.begin_module(profile_id, selected_state.module.id)
+                restart = False
+                if selected_state.started:
+                    print_fn(_row("Enter", "Resume") + "   " + _row("r", "Restart"))
+                    restart = reader.readkey("") == "r"
+                _run_guided_module(service, profile_id, module, reader, print_fn, restart=restart)
+                return
 
 
-def _learn_outdated_modules_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _learn_outdated_modules_flow(
+    service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn
+) -> None:
     """Run guided updates across all outdated modules."""
     states = [state for state in service.list_module_states(profile_id) if state.outdated and state.unlocked]
     if not states:
@@ -300,21 +404,25 @@ def _learn_outdated_modules_flow(service: LearnService, profile_id: int, input_f
     print_fn("\n=== Grouped Outdated Modules ===")
     for item in states:
         print_fn(f"- {item.module.id}: {item.module.title}")
-    confirm = input_fn("Press Enter to start updates (or b to cancel): ").strip().lower()
-    if confirm in MENU_BACK_COMMANDS:
+    print_fn(_row("Enter", "Start updates") + "   " + _row(KEY_BACK, "Cancel") + "   " + _row(KEY_QUIT, "Quit"))
+    key = reader.readkey("")
+    if key == KEY_BACK:
         return
-    if confirm in MENU_QUIT_COMMANDS:
+    if key == KEY_QUIT:
         raise QuitApp()
 
     updated = 0
     for state in states:
         module = service.begin_module(profile_id, state.module.id)
-        completed = _run_guided_module(service, profile_id, module, input_fn, print_fn, restart=False)
+        completed = _run_guided_module(service, profile_id, module, reader, print_fn, restart=False)
         if not completed:
             print_fn(f"Stopped early after updating {updated} module(s).")
             return
         updated += 1
     print_fn(f"Outdated module update complete: {updated} module(s).")
+
+
+# ── Module detail flows (read-only helpers) ────────────────────────────────────
 
 
 def _module_lessons_flow(service: LearnService, module: Module, print_fn: PrintFn) -> None:
@@ -397,102 +505,81 @@ def _module_progression_flow(service: LearnService, profile_id: int, module: Mod
         )
 
 
-def _module_details_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _module_details_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Show command, lesson, and progression details for one selected module."""
     modules = sorted(service.modules.values(), key=lambda item: item.id)
     print_fn("\n=== Module Details ===")
-    for idx, module in enumerate(modules, start=1):
-        print_fn(f"{idx}) {module.id} - {module.title}")
-    print_fn("b) Back")
-    print_fn("q) Quit")
-    choice = input_fn("Choose module: ").strip().lower()
-    if choice in MENU_BACK_COMMANDS:
+    module = _paginated_select(
+        modules,
+        reader,
+        print_fn,
+        format_fn=lambda m: f"{m.id} - {m.title}",
+    )
+    if module is None:
         return
-    if choice in MENU_QUIT_COMMANDS:
-        raise QuitApp()
-    if not choice.isdigit():
-        print_fn("Invalid choice.")
-        return
-    index = int(choice) - 1
-    if not (0 <= index < len(modules)):
-        print_fn("Invalid choice.")
-        return
-    module = modules[index]
 
     while True:
         print_fn(f"\n=== Module Details: {module.id} ===")
-        print_fn("1) Commands")
-        print_fn("2) Lessons")
-        print_fn("3) Progression")
-        print_fn("b) Back")
-        print_fn("q) Quit")
-        detail_choice = input_fn("Choose detail: ").strip().lower()
-        if detail_choice in MENU_BACK_COMMANDS:
+        print_fn(_row("1", "Commands"))
+        print_fn(_row("2", "Lessons"))
+        print_fn(_row("3", "Progression"))
+        print_fn(f"  [{KEY_BACK}] Back   [{KEY_QUIT}] Quit")
+        detail_key = reader.readkey("")
+        if detail_key == KEY_BACK:
             return
-        if detail_choice in MENU_QUIT_COMMANDS:
+        if detail_key == KEY_QUIT:
             raise QuitApp()
-        if detail_choice == "1":
+        if detail_key == "1":
             references = service.list_module_command_references(module.id)
             print_fn(f"\nCommands in {module.title}:")
             for reference in references:
                 flags_text = ", ".join(reference.tested_flags) if reference.tested_flags else "none"
                 print_fn(f"- {reference.command}: {flags_text}")
-        elif detail_choice == "2":
+        elif detail_key == "2":
             _module_lessons_flow(service, module, print_fn)
-        elif detail_choice == "3":
+        elif detail_key == "3":
             _module_progression_flow(service, profile_id, module, print_fn)
-        else:
-            print_fn("Invalid choice.")
 
 
-def _admin_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+# ── Admin flow ─────────────────────────────────────────────────────────────────
+
+
+def _admin_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Admin menu for reference and progression management."""
     while True:
         print_fn("\n=== Admin ===")
-        print_fn("1) Module details")
-        print_fn("2) View schedule queue")
-        print_fn("3) Force unlock module (+ dependencies)")
-        print_fn("4) Export current profile")
-        print_fn("b) Back")
-        print_fn("q) Quit")
-        choice = input_fn("Choose admin option: ").strip().lower()
-        if choice in MENU_BACK_COMMANDS:
+        print_fn(_row("1", "Module details"))
+        print_fn(_row("2", "View schedule queue"))
+        print_fn(_row("3", "Force unlock module (+ dependencies)"))
+        print_fn(_row("4", "Export current profile"))
+        print_fn(f"  [{KEY_BACK}] Back   [{KEY_QUIT}] Quit")
+        choice = reader.readkey("")
+        if choice == KEY_BACK:
             return
-        if choice in MENU_QUIT_COMMANDS:
+        if choice == KEY_QUIT:
             raise QuitApp()
         if choice == "1":
-            _module_details_flow(service, profile_id, input_fn, print_fn)
+            _module_details_flow(service, profile_id, reader, print_fn)
         elif choice == "2":
             _queue_flow(service, profile_id, print_fn)
         elif choice == "3":
-            _force_unlock_flow(service, profile_id, input_fn, print_fn)
+            _force_unlock_flow(service, profile_id, reader, print_fn)
         elif choice == "4":
-            _export_profile_flow(service, profile_id, input_fn, print_fn)
-        else:
-            print_fn("Invalid choice.")
+            _export_profile_flow(service, profile_id, reader, print_fn)
 
 
-def _force_unlock_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _force_unlock_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Force-complete selected module and all prerequisites."""
     modules = sorted(service.modules.values(), key=lambda item: item.id)
     print_fn("\n=== Force Unlock ===")
-    for idx, module in enumerate(modules, start=1):
-        print_fn(f"{idx}) {module.id} - {module.title}")
-    print_fn("b) Back")
-    print_fn("q) Quit")
-    choice = input_fn("Choose module to unlock: ").strip().lower()
-    if choice in MENU_BACK_COMMANDS:
+    selected = _paginated_select(
+        modules,
+        reader,
+        print_fn,
+        format_fn=lambda m: f"{m.id} - {m.title}",
+    )
+    if selected is None:
         return
-    if choice in MENU_QUIT_COMMANDS:
-        raise QuitApp()
-    if not choice.isdigit():
-        print_fn("Invalid choice.")
-        return
-    index = int(choice) - 1
-    if not (0 <= index < len(modules)):
-        print_fn("Invalid choice.")
-        return
-    selected = modules[index]
     unlocked = service.force_unlock_module_with_dependencies(profile_id, selected.id)
     print_fn("Force unlocked modules:")
     for module_id in unlocked:
@@ -531,10 +618,10 @@ def _queue_flow(service: LearnService, profile_id: int, print_fn: PrintFn) -> No
         )
 
 
-def _export_profile_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _export_profile_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Export current profile progress to a JSON file."""
     print_fn("\n=== Export Profile ===")
-    path_text = input_fn("Export file path: ").strip()
+    path_text = reader.readline("Export file path: ").strip()
     if not path_text:
         print_fn("File path is required.")
         return
@@ -549,14 +636,14 @@ def _export_profile_flow(service: LearnService, profile_id: int, input_fn: Input
     print_fn(f"- attempt rows: {summary.attempt_rows}")
 
 
-def _import_profile_flow(service: LearnService, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _import_profile_flow(service: LearnService, reader: InputReader, print_fn: PrintFn) -> None:
     """Import profile progress from a JSON file as a new profile."""
     print_fn("\n=== Import Profile ===")
-    path_text = input_fn("Import file path: ").strip()
+    path_text = reader.readline("Import file path: ").strip()
     if not path_text:
         print_fn("File path is required.")
         return
-    name_text = input_fn("Imported profile name (blank = file value): ").strip()
+    name_text = reader.readline("Imported profile name (blank = file value): ").strip()
     target_name = name_text if name_text else None
     try:
         summary = service.import_profile(path_text, target_name)
@@ -567,6 +654,9 @@ def _import_profile_flow(service: LearnService, input_fn: InputFn, print_fn: Pri
     print_fn(f"- module rows: {summary.module_rows}")
     print_fn(f"- card rows: {summary.card_rows}")
     print_fn(f"- attempt rows: {summary.attempt_rows}")
+
+
+# ── Formatting helpers ─────────────────────────────────────────────────────────
 
 
 def _format_interval(minutes: int) -> str:
@@ -591,11 +681,14 @@ def _format_local_due(due_at: str) -> str:
     return dt.astimezone().strftime("%Y-%m-%d %H:%M")
 
 
+# ── Card practice flows ────────────────────────────────────────────────────────
+
+
 def _run_guided_module(
     service: LearnService,
     profile_id: int,
     module: Module,
-    input_fn: InputFn,
+    reader: InputReader,
     print_fn: PrintFn,
     *,
     restart: bool = False,
@@ -614,7 +707,7 @@ def _run_guided_module(
             if not restart and card.id in correct_card_ids:
                 skipped += 1
                 continue
-            should_continue = _run_guided_card(service, profile_id, card, input_fn, print_fn)
+            should_continue = _run_guided_card(service, profile_id, card, reader, print_fn)
             if not should_continue:
                 print_fn("Leaving module. Progress saved.")
                 return False
@@ -634,7 +727,7 @@ def _run_guided_card(
     service: LearnService,
     profile_id: int,
     card: Card,
-    input_fn: InputFn,
+    reader: InputReader,
     print_fn: PrintFn,
 ) -> bool:
     """Run one guided card until answer is correct."""
@@ -648,9 +741,9 @@ def _run_guided_card(
         print_fn(f"Note: {card.explanation}")
 
     while True:
-        user_input = input_fn("Type command: ").strip()
+        user_input = reader.readline("Type command: ").strip()
         lowered = user_input.lower()
-        if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
+        if lowered in CARD_EXIT_COMMANDS:
             return False
         correct = service.record_answer(profile_id, card, user_input)
         if correct:
@@ -659,7 +752,7 @@ def _run_guided_card(
         print_fn("Not quite. Try again.")
 
 
-def _general_practice_flow(service: LearnService, profile_id: int, input_fn: InputFn, print_fn: PrintFn) -> None:
+def _general_practice_flow(service: LearnService, profile_id: int, reader: InputReader, print_fn: PrintFn) -> None:
     """Run randomized spaced-repetition practice."""
     cards = service.due_cards(profile_id, limit=10)
     if not cards:
@@ -674,16 +767,16 @@ def _general_practice_flow(service: LearnService, profile_id: int, input_fn: Inp
         attempted_count = 0
         for card in cards:
             print_fn(f"\nPrompt: {card.prompt}")
-            user_input = input_fn("Type command (or :show): ").strip()
+            user_input = reader.readline("Type command (or :show): ").strip()
             lowered = user_input.lower()
-            if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
+            if lowered in CARD_EXIT_COMMANDS:
                 print_fn(f"\nRound ended early: {correct_count}/{attempted_count} correct")
                 return
             if lowered == ":show":
                 print_fn(f"Answer: {card.answers[0]}")
-                user_input = input_fn("Now type command: ").strip()
+                user_input = reader.readline("Now type command: ").strip()
                 lowered = user_input.lower()
-                if lowered in BACK_COMMANDS or lowered in FLOW_EXIT_COMMANDS:
+                if lowered in CARD_EXIT_COMMANDS:
                     print_fn(f"\nRound ended early: {correct_count}/{attempted_count} correct")
                     return
 
@@ -699,19 +792,21 @@ def _general_practice_flow(service: LearnService, profile_id: int, input_fn: Inp
 
         due_count = service.count_due_cards(profile_id)
         if due_count > 0:
-            prompt = (
-                f"{due_count} more card{'s' if due_count != 1 else ''} due — press Enter to continue or b/q to stop: "
-            )
+            print_fn(f"\n{due_count} more card{'s' if due_count != 1 else ''} due")
         else:
             next_cards = service.due_cards(profile_id, limit=1)
             if not next_cards:
                 return
-            prompt = "No more cards due — press Enter to practice ahead or b/q to stop: "
-
-        if input_fn(prompt).strip().lower() in CONTINUE_STOP_COMMANDS:
+            print_fn("\nNo more cards due — practice ahead?")
+        print_fn(_row("Enter", "Continue") + "   " + _row(KEY_BACK, "Back") + "   " + _row(KEY_QUIT, "Quit"))
+        key = reader.readkey("")
+        if key in (KEY_BACK, KEY_QUIT):
             return
 
         cards = service.due_cards(profile_id, limit=10)
+
+
+# ── App entry ──────────────────────────────────────────────────────────────────
 
 
 def main_entry() -> None:
