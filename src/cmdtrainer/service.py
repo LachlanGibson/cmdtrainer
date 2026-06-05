@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import shlex
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -322,16 +323,21 @@ class LearnService:
             order.append(current)
 
         visit(module_id)
-        for item in order:
-            self.progress.mark_module_started(profile_id, item)
-            self.progress.mark_module_completed(profile_id, item, self.modules[item].content_version)
-            module = self.modules[item]
-            all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
-            already_correct = self.progress.correct_card_ids(profile_id, all_card_ids)
-            for lesson in module.lessons:
-                for card in lesson.cards:
-                    if card.id not in already_correct:
-                        self.progress.record_attempt(profile_id, card.id, card.answers[0], True)
+        # Seed every module + card in a single transaction. A deep prerequisite
+        # chain can touch a few hundred cards; committing each write separately
+        # means hundreds of fsyncs, which can stall for seconds (and feel frozen)
+        # on Windows where antivirus scans the db file on every flush.
+        with self.progress.transaction():
+            for item in order:
+                self.progress.mark_module_started(profile_id, item)
+                self.progress.mark_module_completed(profile_id, item, self.modules[item].content_version)
+                module = self.modules[item]
+                all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+                already_correct = self.progress.correct_card_ids(profile_id, all_card_ids)
+                for lesson in module.lessons:
+                    for card in lesson.cards:
+                        if card.id not in already_correct:
+                            self.progress.record_attempt(profile_id, card.id, card.answers[0], True)
         return order
 
     def practice_queue(self, profile_id: int, limit: int = 30) -> list[QueueItem]:
@@ -529,7 +535,23 @@ def _normalize_command_variants(command: str) -> set[NormalizedCommand]:
         return set()
     if not tokens:
         return set()
-    return _canonicalize_tokens_variants(tuple(token.strip() for token in tokens))
+    return _canonicalize_tokens_variants(tuple(_normalize_template_whitespace(token.strip()) for token in tokens))
+
+
+_TEMPLATE_ACTION = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
+
+
+def _normalize_template_whitespace(token: str) -> str:
+    """Collapse insignificant whitespace inside Go template `{{ ... }}` actions.
+
+    Docker's `-f`/`--format` uses Go's text/template, where whitespace around the
+    pipeline inside the delimiters is ignored: `{{ .X }}`, `{{.X}}`, and
+    `{{  .X  }}` all render identically and must therefore validate identically.
+    Only the text between `{{` and `}}` is touched, so legitimate spaces in other
+    arguments are preserved. Whitespace-trim markers (`{{-`, `-}}`) survive
+    because their single separating space is retained, not removed.
+    """
+    return _TEMPLATE_ACTION.sub(lambda match: "{{" + " ".join(match.group(1).split()) + "}}", token)
 
 
 def _normalized_command_sort_key(
@@ -552,7 +574,9 @@ def _canonicalize_tokens_variants(tokens: tuple[str, ...]) -> set[NormalizedComm
         positionals: tuple[str, ...],
     ) -> None:
         if index >= len(tokens):
-            normalized_options = tuple((_normalize_option_key(command, key), value) for key, value in options)
+            normalized_options = tuple(
+                (_normalize_option_key(command, key, positionals), value) for key, value in options
+            )
             sorted_options = tuple(
                 sorted(normalized_options, key=lambda pair: (pair[0], "" if pair[1] is None else pair[1]))
             )
@@ -596,10 +620,19 @@ def _parse_long_option(tokens: tuple[str, ...], index: int) -> tuple[str, str | 
     return (token, None, 1)
 
 
-def _normalize_option_key(command: str, key: str) -> str:
-    """Map equivalent option keys to one canonical form for a command."""
+def _normalize_option_key(command: str, key: str, positionals: tuple[str, ...]) -> str:
+    """Map equivalent option keys to one canonical form for a command.
+
+    `positionals` carries the subcommand context (e.g. the `inspect` in
+    `docker inspect`), needed because option aliases are subcommand-specific.
+    """
     if command == "npm" and key == "--workspace":
         return "-w"
+    # `docker inspect` accepts `-f` and `--format` as aliases for the Go-template
+    # output format. This is scoped to `inspect` on purpose: for `docker ps`/
+    # `docker images` the short `-f` is `--filter`, not `--format`.
+    if command == "docker" and positionals[:1] == ("inspect",) and key == "--format":
+        return "-f"
     return key
 
 

@@ -6,6 +6,22 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-05
+
+### Changed
+
+- Retuned the spaced-repetition interval curve from `10 · 1.7^score` to `500 · 1.3^score` (same 30-day cap). Cards now leave the daily zone in ~3 reviews instead of ~7, and mature intervals climb smoothly (≈1.4×–1.7× per review: 11 h, 15 h, 21 h, 1.3 d, 1.9 d, 3 d, 5 d, 8.5 d, 15 d, 28 d) instead of exploding to the cap in a few steps. Scores and the score-update rule are unchanged, so no migration is needed — existing cards pick up the new interval on their next review.
+- The Docker Base "list local images" card now accepts both `docker images` and the equivalent `docker image ls`. The redundant standalone `docker image ls` card was removed from the Docker Image Management module (its `docker image` command and flag coverage remain via the dangling-filter and prune cards).
+- Answer validation now treats whitespace inside Go template `{{ ... }}` actions as insignificant, matching Go's text/template engine. `-f "{{ .X }}"`, `-f "{{.X}}"`, and `-f "{{  .X  }}"` all validate identically; trim markers (`{{-`, `-}}`) are preserved. This fixes the Docker "container IP address" inspect card rejecting equally-valid spacing.
+- Answer validation now accepts `--format` as an alias for `-f` on `docker inspect`. The alias is scoped to `docker inspect`; for `docker ps`/`docker images`, short `-f` remains `--filter` and is not treated as `--format`.
+- General practice now shows the total number of due cards at the start of the first round (or notes when you are practising ahead), matching the remaining-count info previously shown only when continuing after a batch.
+
+### Fixed
+
+- Force-unlocking a module no longer stalls (appearing frozen) for seconds. Seeding a module and its prerequisite chain now runs as a single database transaction instead of committing each card write separately — a deep chain touches a few hundred cards, and one fsync per write could stall for seconds on Windows where antivirus scans the db file on every flush. `ProgressStore` gained a nesting-aware `transaction()` to batch these writes atomically.
+- `readkey` now also flushes stdout before blocking on the hidden key read, so menu output (printed without an explicit flush, with an empty prompt) is always visible before the app waits for input.
+- Learn module list now numbers each page's rows from 1 again. Previously, rows on page 2 and beyond continued the global count (10, 11, …) even though the menu only accepts keys 1-9, so the displayed numbers did not match the keys needed to select those modules.
+
 ## [1.5.0] - 2026-04-12
 
 ### Changed

@@ -12,16 +12,6 @@
       "order": 1,
       "cards": [
         {
-          "id": "docker-image-ls",
-          "prompt": "Using Docker image commands, list local images using docker image command.",
-          "answers": [
-            "docker image ls"
-          ],
-          "explanation": "Equivalent to docker images.",
-          "command": "docker image",
-          "tested_flags": []
-        },
-        {
           "id": "docker-image-ls-dangling",
           "prompt": "Using Docker image commands, list only dangling images.",
           "answers": [
@@ -130,5 +120,5 @@
       ]
     }
   ],
-  "content_version": 1
+  "content_version": 2
 }

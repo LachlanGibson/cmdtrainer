@@ -2,7 +2,7 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
-from cmdtrainer.progress import ProgressStore
+from cmdtrainer.progress import ProgressStore, _interval_from_score
 
 
 def test_profiles_and_module_state() -> None:
@@ -41,6 +41,47 @@ def test_delete_profile_missing_returns_false() -> None:
     assert store.delete_profile(9999) is False
 
 
+def test_transaction_batches_writes_atomically() -> None:
+    """Writes inside a transaction defer their commit and roll back together.
+
+    Guards the force-unlock batching: per-card writes must not each commit
+    independently, otherwise a deep dependency chain pays one fsync per write
+    (hundreds of them), which can stall for seconds and appear frozen.
+    """
+    store = ProgressStore(":memory:")
+    profile = store.create_profile("p")
+
+    try:
+        with store.transaction():
+            store.mark_module_started(profile.id, "m1")
+            store.record_attempt(profile.id, "c1", "ans", True)
+            raise RuntimeError("boom")
+    except RuntimeError:
+        pass
+
+    # Nothing from the failed batch should have been committed.
+    assert store.started_module_ids(profile.id) == set()
+    assert store.get_card_schedule(profile.id, "c1") is None
+
+
+def test_transaction_commits_nested_writes_on_success() -> None:
+    """A successful batch commits all writes, including nested transaction() calls."""
+    store = ProgressStore(":memory:")
+    profile = store.create_profile("p")
+
+    with store.transaction():
+        # mark_module_completed calls mark_module_started internally, so this
+        # exercises nested transaction() blocks within the same batch.
+        store.mark_module_completed(profile.id, "m1", 2)
+        store.record_attempt(profile.id, "c1", "ans", True)
+
+    started, completed, version = store.module_state(profile.id, "m1")
+    assert started is True
+    assert completed is True
+    assert version == 2
+    assert store.get_card_schedule(profile.id, "c1") is not None
+
+
 def test_migration_sets_user_version_and_schema_history() -> None:
     store = ProgressStore(":memory:")
     version = int(store._conn.execute("PRAGMA user_version").fetchone()[0])  # noqa: SLF001
@@ -68,6 +109,16 @@ def test_card_progress_scheduling() -> None:
     assert schedule.interval_minutes == 0
     assert schedule.seen_count == 2
     assert datetime.fromisoformat(schedule.due_at) <= datetime.now(UTC)
+
+
+def test_interval_from_score_curve() -> None:
+    """Interval curve uses A=500, B=1.3 and is bounded to [0, 30 days]."""
+    assert _interval_from_score(0) == 500  # 500 min base
+    assert _interval_from_score(1) == 650  # 500 * 1.3
+    # score ~3.45 is the 3rd all-correct review: ~20.6 h, just under a day.
+    assert _interval_from_score(3.45) == 1236
+    # Growth is bounded at 30 days regardless of how high the score climbs.
+    assert _interval_from_score(100) == 60 * 24 * 30
 
 
 def test_wrong_answer_is_due_soon_even_after_growth() -> None:

@@ -367,6 +367,11 @@ def test_learn_module_flow_pagination() -> None:
     main._learn_module_flow(ManyModulesService(), 1, _reader("n", "2", "pwd"), outputs.append)
     assert any("Page 1/2" in line for line in outputs)
     assert any("Page 2/2" in line for line in outputs)
+    # Page 2 rows must be numbered per-page (1, 2) to match the 1-9 keys the
+    # user presses — not a continuing global count (10, 11).
+    assert any(line.lstrip().startswith("1 mod-09") for line in outputs)
+    assert any(line.lstrip().startswith("2 mod-10") for line in outputs)
+    assert not any(line.lstrip().startswith("10 mod-09") for line in outputs)
     assert any("Module completed" in line for line in outputs)
 
 
@@ -810,6 +815,31 @@ def test_general_practice_incorrect_and_show_exit() -> None:
     outputs = []
     main._general_practice_flow(DummyService(), 1, _reader(":show", ":exit"), outputs.append)
     assert any("Round ended early" in line for line in outputs)
+
+
+def test_general_practice_shows_due_count_at_start() -> None:
+    """The total due count is shown at the start, before the first round."""
+
+    class StartService(DummyService):
+        def count_due_cards(self, profile_id: int) -> int:
+            return 3
+
+    outputs: list[str] = []
+    # pwd=answer round 1, q=stop at the continue prompt
+    main._general_practice_flow(StartService(), 1, _reader("pwd", "q"), outputs.append)
+    start_index = next(i for i, line in enumerate(outputs) if "Cards due: 3" in line)
+    round_index = next(i for i, line in enumerate(outputs) if "Round complete" in line)
+    assert start_index < round_index
+    # The start count must not be duplicated on later rounds (post-batch already shows remaining).
+    assert sum(1 for line in outputs if "Cards due: 3" in line) == 1
+
+
+def test_general_practice_shows_practicing_ahead_at_start() -> None:
+    """When nothing is currently due, the start banner says practicing ahead."""
+    outputs: list[str] = []
+    # DummyService.count_due_cards returns 0 with a single practice-ahead card.
+    main._general_practice_flow(DummyService(), 1, _reader("pwd"), outputs.append)
+    assert any("practising ahead" in line.lower() for line in outputs)
 
 
 def test_general_practice_continue_prompt_due_cards() -> None:

@@ -80,7 +80,9 @@ Build a profile-based command-learning CLI with guided first-time module learnin
 - Compare normalized commands:
   - command token must match,
   - options/flags are order-insensitive,
-  - positional argument order is preserved.
+  - positional argument order is preserved,
+  - whitespace inside Go template `{{ ... }}` actions is insignificant (matches Go text/template; trim markers `{{-`/`-}}` preserved),
+  - known command-specific option aliases are unified (e.g. `--format` ≡ `-f` for `docker inspect` only; `--workspace` ≡ `-w` for `npm`).
 - Support multiple accepted forms per card when syntax variants are meaningfully different.
 - Do not execute learner commands.
 
