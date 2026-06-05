@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -43,7 +45,31 @@ class ProgressStore:
         self._conn = sqlite3.connect(target)
         self._conn.row_factory = sqlite3.Row
         self._card_progress_has_interval_days = False
+        self._txn_depth = 0
         self._init_db()
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Group multiple writes into a single committed transaction.
+
+        Supports nesting: only the outermost block commits, so callers can wrap a
+        batch of write methods (each of which uses this same context manager) and
+        pay one fsync instead of one per write. On error the whole batch rolls
+        back.
+        """
+        if self._txn_depth > 0:
+            self._txn_depth += 1
+            try:
+                yield
+            finally:
+                self._txn_depth -= 1
+            return
+        self._txn_depth += 1
+        try:
+            with self._conn:
+                yield
+        finally:
+            self._txn_depth -= 1
 
     def _init_db(self) -> None:
         self._apply_migrations()
@@ -193,7 +219,7 @@ class ProgressStore:
     def mark_module_started(self, profile_id: int, module_id: str) -> None:
         """Set module started timestamp if absent."""
         now = datetime.now(UTC).isoformat()
-        with self._conn:
+        with self.transaction():
             self._conn.execute(
                 """
                 INSERT OR IGNORE INTO module_progress (
@@ -214,7 +240,7 @@ class ProgressStore:
         self.mark_module_started(profile_id, module_id)
         if content_version is None:
             content_version = 1
-        with self._conn:
+        with self.transaction():
             self._conn.execute(
                 """
                 UPDATE module_progress
@@ -521,7 +547,7 @@ class ProgressStore:
         - incorrect answers are always scheduled very soon (2 minutes), regardless of score.
         """
         now = datetime.now(UTC)
-        with self._conn:
+        with self.transaction():
             self._conn.execute(
                 """
                 INSERT INTO attempts (profile_id, card_id, user_input, is_correct, created_at)
@@ -551,7 +577,7 @@ class ProgressStore:
             interval_minutes = 0
             due = now
 
-        with self._conn:
+        with self.transaction():
             if self._card_progress_has_interval_days:
                 interval_days = max(0, interval_minutes // (60 * 24))
                 self._conn.execute(

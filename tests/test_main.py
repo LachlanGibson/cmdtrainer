@@ -839,7 +839,7 @@ def test_general_practice_shows_practicing_ahead_at_start() -> None:
     outputs: list[str] = []
     # DummyService.count_due_cards returns 0 with a single practice-ahead card.
     main._general_practice_flow(DummyService(), 1, _reader("pwd"), outputs.append)
-    assert any("practicing ahead" in line.lower() for line in outputs)
+    assert any("practising ahead" in line.lower() for line in outputs)
 
 
 def test_general_practice_continue_prompt_due_cards() -> None:

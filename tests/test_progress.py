@@ -41,6 +41,47 @@ def test_delete_profile_missing_returns_false() -> None:
     assert store.delete_profile(9999) is False
 
 
+def test_transaction_batches_writes_atomically() -> None:
+    """Writes inside a transaction defer their commit and roll back together.
+
+    Guards the force-unlock batching: per-card writes must not each commit
+    independently, otherwise a deep dependency chain pays one fsync per write
+    (hundreds of them), which can stall for seconds and appear frozen.
+    """
+    store = ProgressStore(":memory:")
+    profile = store.create_profile("p")
+
+    try:
+        with store.transaction():
+            store.mark_module_started(profile.id, "m1")
+            store.record_attempt(profile.id, "c1", "ans", True)
+            raise RuntimeError("boom")
+    except RuntimeError:
+        pass
+
+    # Nothing from the failed batch should have been committed.
+    assert store.started_module_ids(profile.id) == set()
+    assert store.get_card_schedule(profile.id, "c1") is None
+
+
+def test_transaction_commits_nested_writes_on_success() -> None:
+    """A successful batch commits all writes, including nested transaction() calls."""
+    store = ProgressStore(":memory:")
+    profile = store.create_profile("p")
+
+    with store.transaction():
+        # mark_module_completed calls mark_module_started internally, so this
+        # exercises nested transaction() blocks within the same batch.
+        store.mark_module_completed(profile.id, "m1", 2)
+        store.record_attempt(profile.id, "c1", "ans", True)
+
+    started, completed, version = store.module_state(profile.id, "m1")
+    assert started is True
+    assert completed is True
+    assert version == 2
+    assert store.get_card_schedule(profile.id, "c1") is not None
+
+
 def test_migration_sets_user_version_and_schema_history() -> None:
     store = ProgressStore(":memory:")
     version = int(store._conn.execute("PRAGMA user_version").fetchone()[0])  # noqa: SLF001

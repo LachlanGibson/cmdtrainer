@@ -323,16 +323,21 @@ class LearnService:
             order.append(current)
 
         visit(module_id)
-        for item in order:
-            self.progress.mark_module_started(profile_id, item)
-            self.progress.mark_module_completed(profile_id, item, self.modules[item].content_version)
-            module = self.modules[item]
-            all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
-            already_correct = self.progress.correct_card_ids(profile_id, all_card_ids)
-            for lesson in module.lessons:
-                for card in lesson.cards:
-                    if card.id not in already_correct:
-                        self.progress.record_attempt(profile_id, card.id, card.answers[0], True)
+        # Seed every module + card in a single transaction. A deep prerequisite
+        # chain can touch a few hundred cards; committing each write separately
+        # means hundreds of fsyncs, which can stall for seconds (and feel frozen)
+        # on Windows where antivirus scans the db file on every flush.
+        with self.progress.transaction():
+            for item in order:
+                self.progress.mark_module_started(profile_id, item)
+                self.progress.mark_module_completed(profile_id, item, self.modules[item].content_version)
+                module = self.modules[item]
+                all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
+                already_correct = self.progress.correct_card_ids(profile_id, all_card_ids)
+                for lesson in module.lessons:
+                    for card in lesson.cards:
+                        if card.id not in already_correct:
+                            self.progress.record_attempt(profile_id, card.id, card.answers[0], True)
         return order
 
     def practice_queue(self, profile_id: int, limit: int = 30) -> list[QueueItem]:

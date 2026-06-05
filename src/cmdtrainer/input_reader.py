@@ -35,6 +35,12 @@ class TerminalInputReader:  # pragma: no cover
         """Read a single keypress from the terminal without echo."""
         if prompt:
             print(prompt, end="", flush=True)
+        # Flush any pending menu output before blocking on the hidden keypress
+        # read. Menus print with `print` (no explicit flush) and call this with
+        # an empty prompt, so without this a buffered stdout can leave the menu
+        # invisible while `_getch` blocks — the app appears frozen until later
+        # output happens to flush the buffer.
+        sys.stdout.flush()
         return _getch()
 
 

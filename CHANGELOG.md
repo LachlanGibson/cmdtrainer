@@ -15,6 +15,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Fixed
 
+- Force-unlocking a module no longer stalls (appearing frozen) for seconds. Seeding a module and its prerequisite chain now runs as a single database transaction instead of committing each card write separately — a deep chain touches a few hundred cards, and one fsync per write could stall for seconds on Windows where antivirus scans the db file on every flush. `ProgressStore` gained a nesting-aware `transaction()` to batch these writes atomically.
+- `readkey` now also flushes stdout before blocking on the hidden key read, so menu output (printed without an explicit flush, with an empty prompt) is always visible before the app waits for input.
 - Learn module list now numbers each page's rows from 1 again. Previously, rows on page 2 and beyond continued the global count (10, 11, …) even though the menu only accepts keys 1-9, so the displayed numbers did not match the keys needed to select those modules.
 
 ## [1.5.0] - 2026-04-12
