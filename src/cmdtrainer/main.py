@@ -759,8 +759,16 @@ def _general_practice_flow(service: LearnService, profile_id: int, reader: Input
         print_fn("No cards available. Start a module first.")
         return
 
+    first_round = True
     while True:
         print_fn("\n=== General Practice ===")
+        if first_round:
+            due_count = service.count_due_cards(profile_id)
+            if due_count > 0:
+                print_fn(f"Cards due: {due_count}")
+            else:
+                print_fn("No cards due — practising ahead.")
+            first_round = False
         print_fn(f"Cards this round: {len(cards)}")
         print_fn("Type :b or :q to exit practice.")
         correct_count = 0
