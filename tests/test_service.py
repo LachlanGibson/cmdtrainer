@@ -41,6 +41,42 @@ def test_multi_prereq_unlock_after_both_completed() -> None:
     assert states["docker-context"].unlocked is True
 
 
+def test_orphaned_card_progress_is_ignored_after_card_removal() -> None:
+    """Progress rows for a removed card (e.g. former docker-image-ls) stay inert.
+
+    Deleting a card from content is a content change, not a schema change, so no
+    DB migration runs and older profiles keep card_progress/attempt rows keyed by
+    the removed card id. Queue and completion logic iterate loaded-module cards
+    and query the DB by those ids, never the reverse, so orphan rows must never
+    surface as practice cards nor break scheduling/completion.
+    """
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-orphan")
+    store = service.progress
+
+    # The removed id exists nowhere in loaded content.
+    all_card_ids = {card.id for m in service.modules.values() for lesson in m.lessons for card in lesson.cards}
+    assert "docker-image-ls" not in all_card_ids
+
+    # Simulate a profile that practiced the now-removed card: real orphan rows in
+    # both attempts and card_progress (record_attempt writes a schedule too).
+    store.mark_module_started(profile.id, "docker-image")
+    store.record_attempt(profile.id, "docker-image-ls", "docker image ls", True)
+    assert store.get_card_schedule(profile.id, "docker-image-ls") is not None
+
+    # The orphan never surfaces in the queue and never breaks scheduling.
+    assert isinstance(service.count_due_cards(profile.id), int)
+    assert all(card.id != "docker-image-ls" for card in service.due_cards(profile.id, limit=50))
+
+    # The docker-image module no longer counts the removed card toward mastery,
+    # so completion is driven purely by the cards that still exist.
+    module = service.modules["docker-image"]
+    for lesson in module.lessons:
+        for card in lesson.cards:
+            store.record_attempt(profile.id, card.id, card.answers[0], True)
+    assert service.complete_module_if_mastered(profile.id, module) is True
+
+
 def test_started_module_stays_unlocked_if_prereqs_not_met() -> None:
     service = LearnService(":memory:")
     profile = service.create_profile("p-grandfather")

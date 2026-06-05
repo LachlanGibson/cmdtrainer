@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Changed
+
+- The Docker Base "list local images" card now accepts both `docker images` and the equivalent `docker image ls`. The redundant standalone `docker image ls` card was removed from the Docker Image Management module (its `docker image` command and flag coverage remain via the dangling-filter and prune cards).
+
 ### Fixed
 
 - Learn module list now numbers each page's rows from 1 again. Previously, rows on page 2 and beyond continued the global count (10, 11, …) even though the menu only accepts keys 1-9, so the displayed numbers did not match the keys needed to select those modules.

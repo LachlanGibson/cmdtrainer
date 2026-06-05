@@ -37,9 +37,10 @@
           "id": "docker-images",
           "prompt": "Using Docker, list local Docker images.",
           "answers": [
-            "docker images"
+            "docker images",
+            "docker image ls"
           ],
-          "explanation": "Alias for docker image ls.",
+          "explanation": "docker images is an alias for docker image ls; both list local images.",
           "command": "docker images",
           "tested_flags": []
         },
@@ -377,5 +378,5 @@
       ]
     }
   ],
-  "content_version": 1
+  "content_version": 2
 }
