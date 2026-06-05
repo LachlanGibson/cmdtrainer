@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-06-05
+
 ### Changed
 
 - Retuned the spaced-repetition interval curve from `10 · 1.7^score` to `500 · 1.3^score` (same 30-day cap). Cards now leave the daily zone in ~3 reviews instead of ~7, and mature intervals climb smoothly (≈1.4×–1.7× per review: 11 h, 15 h, 21 h, 1.3 d, 1.9 d, 3 d, 5 d, 8.5 d, 15 d, 28 d) instead of exploding to the cap in a few steps. Scores and the score-update rule are unchanged, so no migration is needed — existing cards pick up the new interval on their next review.
