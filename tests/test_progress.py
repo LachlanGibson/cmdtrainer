@@ -2,7 +2,7 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
-from cmdtrainer.progress import ProgressStore
+from cmdtrainer.progress import ProgressStore, _interval_from_score
 
 
 def test_profiles_and_module_state() -> None:
@@ -109,6 +109,16 @@ def test_card_progress_scheduling() -> None:
     assert schedule.interval_minutes == 0
     assert schedule.seen_count == 2
     assert datetime.fromisoformat(schedule.due_at) <= datetime.now(UTC)
+
+
+def test_interval_from_score_curve() -> None:
+    """Interval curve uses A=500, B=1.3 and is bounded to [0, 30 days]."""
+    assert _interval_from_score(0) == 500  # 500 min base
+    assert _interval_from_score(1) == 650  # 500 * 1.3
+    # score ~3.45 is the 3rd all-correct review: ~20.6 h, just under a day.
+    assert _interval_from_score(3.45) == 1236
+    # Growth is bounded at 30 days regardless of how high the score climbs.
+    assert _interval_from_score(100) == 60 * 24 * 30
 
 
 def test_wrong_answer_is_due_soon_even_after_growth() -> None:

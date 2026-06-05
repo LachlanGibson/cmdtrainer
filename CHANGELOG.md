@@ -8,6 +8,7 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Changed
 
+- Retuned the spaced-repetition interval curve from `10 · 1.7^score` to `500 · 1.3^score` (same 30-day cap). Cards now leave the daily zone in ~3 reviews instead of ~7, and mature intervals climb smoothly (≈1.4×–1.7× per review: 11 h, 15 h, 21 h, 1.3 d, 1.9 d, 3 d, 5 d, 8.5 d, 15 d, 28 d) instead of exploding to the cap in a few steps. Scores and the score-update rule are unchanged, so no migration is needed — existing cards pick up the new interval on their next review.
 - The Docker Base "list local images" card now accepts both `docker images` and the equivalent `docker image ls`. The redundant standalone `docker image ls` card was removed from the Docker Image Management module (its `docker image` command and flag coverage remain via the dangling-filter and prune cards).
 - Answer validation now treats whitespace inside Go template `{{ ... }}` actions as insignificant, matching Go's text/template engine. `-f "{{ .X }}"`, `-f "{{.X}}"`, and `-f "{{  .X  }}"` all validate identically; trim markers (`{{-`, `-}}`) are preserved. This fixes the Docker "container IP address" inspect card rejecting equally-valid spacing.
 - Answer validation now accepts `--format` as an alias for `-f` on `docker inspect`. The alias is scoped to `docker inspect`; for `docker ps`/`docker images`, short `-f` remains `--filter` and is not treated as `--format`.

@@ -42,10 +42,20 @@ Incorrect answers are immediately due for review, regardless of previous score.
 
 `interval_from_score(score)`:
 
-- `minutes = round(10 * (1.7 ** score))`
+- `minutes = round(A * (B ** score))` with `A = 500`, `B = 1.3`
 - bounded to `[0, 43200]` minutes
   - minimum: 0 minutes (immediately due)
   - maximum: 30 days
+
+`A` (base) lifts the early intervals so a card leaves the daily zone within a few
+correct reviews rather than ~7; `B` (growth) is intentionally gentle so mature
+intervals climb smoothly toward the cap instead of exploding. For the standard
+all-correct progression the intervals run roughly: 11 h, 15 h, 21 h, 1.3 d, 1.9 d,
+3 d, 5 d, 8.5 d, 15 d, 28 d, then the 30-day cap.
+
+These constants are tuned against the (accelerating) score update rule above.
+Retuning them reshapes existing cards' intervals on their next review but requires
+no migration, because the stored scores are unchanged.
 
 ## Queue Selection (Practice)
 

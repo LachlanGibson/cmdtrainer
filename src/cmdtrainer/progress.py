@@ -667,7 +667,18 @@ class ProgressStore:
             pass
 
 
+# Interval curve: interval_minutes = A * B**score, bounded to [0, 30 days].
+# A (base) lifts the early intervals so a card leaves the daily zone within a few
+# reviews instead of ~7; B (growth) is gentle so mature intervals climb smoothly
+# to the cap rather than exploding. Tuned against the current accelerating score
+# update rule. Changing these reshapes existing cards' intervals on their next
+# review but needs no migration, since scores are untouched.
+_INTERVAL_BASE_MINUTES = 500.0
+_INTERVAL_GROWTH_BASE = 1.3
+_INTERVAL_CAP_MINUTES = 60 * 24 * 30  # 30 days
+
+
 def _interval_from_score(score: float) -> int:
     """Convert spacing score to interval minutes using bounded exponential growth."""
-    minutes = int(round(10 * (1.7**score)))
-    return max(0, min(minutes, 60 * 24 * 30))
+    minutes = int(round(_INTERVAL_BASE_MINUTES * (_INTERVAL_GROWTH_BASE**score)))
+    return max(0, min(minutes, _INTERVAL_CAP_MINUTES))
