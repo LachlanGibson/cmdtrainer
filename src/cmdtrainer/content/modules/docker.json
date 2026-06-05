@@ -208,7 +208,7 @@
           "answers": [
             "docker inspect -f \"{{ .NetworkSettings.IPAddress }}\" api"
           ],
-          "explanation": "-f uses Go template formatting.",
+          "explanation": "-f (or --format) uses Go template formatting; whitespace inside {{ }} is ignored.",
           "command": "docker inspect",
           "tested_flags": [
             "-f"

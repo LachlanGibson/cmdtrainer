@@ -9,6 +9,8 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 ### Changed
 
 - The Docker Base "list local images" card now accepts both `docker images` and the equivalent `docker image ls`. The redundant standalone `docker image ls` card was removed from the Docker Image Management module (its `docker image` command and flag coverage remain via the dangling-filter and prune cards).
+- Answer validation now treats whitespace inside Go template `{{ ... }}` actions as insignificant, matching Go's text/template engine. `-f "{{ .X }}"`, `-f "{{.X}}"`, and `-f "{{  .X  }}"` all validate identically; trim markers (`{{-`, `-}}`) are preserved. This fixes the Docker "container IP address" inspect card rejecting equally-valid spacing.
+- Answer validation now accepts `--format` as an alias for `-f` on `docker inspect`. The alias is scoped to `docker inspect`; for `docker ps`/`docker images`, short `-f` remains `--filter` and is not treated as `--format`.
 
 ### Fixed
 
