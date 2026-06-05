@@ -367,6 +367,11 @@ def test_learn_module_flow_pagination() -> None:
     main._learn_module_flow(ManyModulesService(), 1, _reader("n", "2", "pwd"), outputs.append)
     assert any("Page 1/2" in line for line in outputs)
     assert any("Page 2/2" in line for line in outputs)
+    # Page 2 rows must be numbered per-page (1, 2) to match the 1-9 keys the
+    # user presses — not a continuing global count (10, 11).
+    assert any(line.lstrip().startswith("1 mod-09") for line in outputs)
+    assert any(line.lstrip().startswith("2 mod-10") for line in outputs)
+    assert not any(line.lstrip().startswith("10 mod-09") for line in outputs)
     assert any("Module completed" in line for line in outputs)
 
 

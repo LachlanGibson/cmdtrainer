@@ -326,7 +326,7 @@ def _learn_module_flow(service: LearnService, profile_id: int, reader: InputRead
         print_fn(header)
         print_fn("-" * len(header))
         completed_ids = {state.module.id for state in all_states if state.completed}
-        for idx, state in enumerate(page_states, start=start + 1):
+        for idx, state in enumerate(page_states, start=1):
             status = (
                 "outdated"
                 if state.outdated
