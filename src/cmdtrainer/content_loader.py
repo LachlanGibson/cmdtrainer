@@ -135,6 +135,12 @@ def _validate_unique_card_ids(modules: dict[str, Module]) -> None:
                 seen[card.id] = module.id
 
 
+# Roots whose first positional argument is a subcommand, so the command identity
+# is "root subcommand" (e.g. "git status", "npm install"). Deeper nesting (e.g.
+# "docker network inspect") still needs an explicit `command` in content.
+_SUBCOMMAND_ROOTS = frozenset({"git", "apt", "npm", "tmux", "ip"})
+
+
 def _infer_command(answer: str) -> str:
     """Infer a normalized command path from one answer string."""
     tokens = _tokenize(answer)
@@ -149,7 +155,7 @@ def _infer_command(answer: str) -> str:
             return "docker " + tokens[1]
         return "docker"
 
-    if first in {"git", "apt"}:
+    if first in _SUBCOMMAND_ROOTS:
         if len(tokens) > 1 and not tokens[1].startswith("-"):
             return f"{first} {tokens[1]}"
         return first

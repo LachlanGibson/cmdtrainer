@@ -347,6 +347,7 @@ class LearnService:
             return []
 
         now = datetime.now(UTC)
+        schedules = self.progress.card_schedules(profile_id)
         items: list[tuple[datetime, QueueItem]] = []
         for module_id in sorted(eligible_modules):
             module = self.modules.get(module_id)
@@ -358,7 +359,7 @@ class LearnService:
                 for card in lesson.cards:
                     if card.id not in correct_ids:
                         continue
-                    schedule = self.progress.get_card_schedule(profile_id, card.id)
+                    schedule = schedules.get(card.id)
                     if schedule is None:
                         item = QueueItem(
                             card_id=card.id,
@@ -413,16 +414,19 @@ class LearnService:
         return correct
 
     def complete_module_if_mastered(self, profile_id: int, module: Module) -> bool:
-        """Mark module complete when all cards have at least one correct attempt."""
+        """Mark module complete when all cards have a correct attempt.
+
+        Returns True only when this call newly completes the module, so callers
+        can report a first completion without misfiring on repeat runs.
+        """
         all_card_ids = [card.id for lesson in module.lessons for card in lesson.cards]
-        if not all_card_ids:
-            self.progress.mark_module_completed(profile_id, module.id, module.content_version)
-            return True
-        mastered = self.progress.correct_card_ids(profile_id, all_card_ids)
-        if len(mastered) < len(all_card_ids):
-            return False
+        if all_card_ids:
+            mastered = self.progress.correct_card_ids(profile_id, all_card_ids)
+            if len(mastered) < len(all_card_ids):
+                return False
+        _, already_completed, _ = self.progress.module_state(profile_id, module.id)
         self.progress.mark_module_completed(profile_id, module.id, module.content_version)
-        return True
+        return not already_completed
 
     def _collect_queue(self, profile_id: int) -> tuple[list[Card], list[tuple[datetime, Card]]]:
         """Collect all eligible cards split into due and not-yet-due lists."""
@@ -430,6 +434,7 @@ class LearnService:
         if not eligible_modules:
             return [], []
         now = datetime.now(UTC)
+        schedules = self.progress.card_schedules(profile_id)
         due: list[Card] = []
         future: list[tuple[datetime, Card]] = []
         for module_id in eligible_modules:
@@ -442,7 +447,7 @@ class LearnService:
                 for card in lesson.cards:
                     if card.id not in correct_ids:
                         continue
-                    schedule = self.progress.get_card_schedule(profile_id, card.id)
+                    schedule = schedules.get(card.id)
                     if schedule is None:
                         due.append(card)
                         continue

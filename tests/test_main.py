@@ -976,6 +976,19 @@ def test_paginated_select_select_from_page_2() -> None:
     assert result == "item-10"
 
 
+def test_paginate_helper() -> None:
+    """Shared pagination math: slicing, total pages, and page clamping."""
+    items = list(range(20))  # 3 pages at size 9
+    assert main._paginate(items, 0, 9) == (list(range(0, 9)), 3, 0)
+    assert main._paginate(items, 1, 9) == (list(range(9, 18)), 3, 1)
+    assert main._paginate(items, 2, 9) == ([18, 19], 3, 2)
+    # Overshoot clamps to the last page; negative clamps to the first.
+    assert main._paginate(items, 99, 9) == ([18, 19], 3, 2)
+    assert main._paginate(items, -5, 9) == (list(range(0, 9)), 3, 0)
+    # Empty list is a single empty page.
+    assert main._paginate([], 0, 9) == ([], 1, 0)
+
+
 # ── play_shell QuitApp and switch-profile-quit tests ──────────────────────────
 
 

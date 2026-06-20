@@ -6,6 +6,17 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-06-20
+
+### Fixed
+
+- Corrected the declared Python requirement to `>=3.12` (was `>=3.10`). The code uses 3.12+ syntax, so installing on 3.10/3.11 would have failed.
+- Guided learning no longer reports "Module completed for the first time." when re-running or resuming an already-completed module; that message now appears only on the genuine first completion.
+
+### Changed
+
+- Practice queue building now loads all card schedules in a single query instead of one per card, so building the queue stays fast on large decks.
+
 ## [1.6.0] - 2026-06-05
 
 ### Changed
