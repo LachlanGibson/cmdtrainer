@@ -75,7 +75,12 @@ def test_infer_command_branches() -> None:
     assert content_loader._infer_command("git --version") == "git"
     assert content_loader._infer_command("git status -s") == "git status"
     assert content_loader._infer_command("apt update") == "apt update"
-    assert content_loader._infer_command("npm install -D vitest") == "npm"
+    # Subcommand-based CLIs infer the "cmd subcommand" pair, not just the root.
+    assert content_loader._infer_command("npm install -D vitest") == "npm install"
+    assert content_loader._infer_command("npm") == "npm"
+    assert content_loader._infer_command("tmux new -s work") == "tmux new"
+    assert content_loader._infer_command("ip addr show") == "ip addr"
+    # Commands without subcommands still infer just the root.
     assert content_loader._infer_command("node --test") == "node"
     assert content_loader._infer_command('"') == ""
 

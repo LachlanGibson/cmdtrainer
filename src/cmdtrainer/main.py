@@ -41,6 +41,28 @@ def _row(key: str, label: str) -> str:
     return f"  [{key}] {label}"
 
 
+def _paginate[T](items: list[T], page: int, page_size: int) -> tuple[list[T], int, int]:
+    """Clamp *page* into range and return (page_items, total_pages, clamped_page).
+
+    Single source of truth for the page arithmetic shared by every paginated
+    menu, so the slice and 1-based numbering can't drift between them.
+    """
+    total_pages = max(1, (len(items) + page_size - 1) // page_size)
+    page = min(max(page, 0), total_pages - 1)
+    start = page * page_size
+    return items[start : start + page_size], total_pages, page
+
+
+def _nav_footer_parts(page: int, total_pages: int) -> list[str]:
+    """Return the [p] Prev / [n] Next footer entries for the current page."""
+    parts: list[str] = []
+    if total_pages > 1 and page > 0:
+        parts.append(f"[{KEY_PREV}] Prev")
+    if total_pages > 1 and page < total_pages - 1:
+        parts.append(f"[{KEY_NEXT}] Next")
+    return parts
+
+
 def _paginated_select[T](
     items: list[T],
     reader: InputReader,
@@ -56,21 +78,14 @@ def _paginated_select[T](
     """
     page = 0
     while True:
-        total_pages = max(1, (len(items) + page_size - 1) // page_size)
-        page = min(page, total_pages - 1)
-        start = page * page_size
-        page_items = items[start : start + page_size]
+        page_items, total_pages, page = _paginate(items, page, page_size)
 
         if total_pages > 1:
             print_fn(f"  (Page {page + 1}/{total_pages})")
         for i, item in enumerate(page_items, 1):
             print_fn(_row(str(i), format_fn(item)))
 
-        footer: list[str] = []
-        if total_pages > 1 and page > 0:
-            footer.append(f"[{KEY_PREV}] Prev")
-        if total_pages > 1 and page < total_pages - 1:
-            footer.append(f"[{KEY_NEXT}] Next")
+        footer = _nav_footer_parts(page, total_pages)
         footer.extend([f"[{KEY_BACK}] Back", f"[{KEY_QUIT}] Quit"])
         print_fn("  " + "   ".join(footer))
 
@@ -152,10 +167,7 @@ def _select_profile(
     page_size = 9
     while True:
         profiles = service.list_profiles()
-        total_pages = max(1, (len(profiles) + page_size - 1) // page_size)
-        page = min(page, total_pages - 1)
-        start = page * page_size
-        page_profiles = profiles[start : start + page_size]
+        page_profiles, total_pages, page = _paginate(profiles, page, page_size)
 
         print_fn("\n=== Profiles ===")
         if total_pages > 1:
@@ -166,11 +178,7 @@ def _select_profile(
         else:
             print_fn("  No profiles yet.")
 
-        footer: list[str] = []
-        if total_pages > 1 and page > 0:
-            footer.append(f"[{KEY_PREV}] Prev")
-        if total_pages > 1 and page < total_pages - 1:
-            footer.append(f"[{KEY_NEXT}] Next")
+        footer = _nav_footer_parts(page, total_pages)
         footer.extend(["[c] Create new", "[i] Import", "[d] Delete", "[q] Quit"])
         print_fn("  " + "   ".join(footer))
 
@@ -304,10 +312,7 @@ def _learn_module_flow(service: LearnService, profile_id: int, reader: InputRead
     page_size = 9
 
     while True:
-        total_pages = max(1, (len(states) + page_size - 1) // page_size)
-        page = min(page, total_pages - 1)
-        start = page * page_size
-        page_states = states[start : start + page_size]
+        page_states, total_pages, page = _paginate(states, page, page_size)
 
         print_fn("\n=== Learn Module ===")
 
@@ -357,10 +362,7 @@ def _learn_module_flow(service: LearnService, profile_id: int, reader: InputRead
         footer: list[str] = []
         if has_outdated:
             footer.append("[g] Grouped outdated")
-        if total_pages > 1 and page > 0:
-            footer.append(f"[{KEY_PREV}] Prev")
-        if total_pages > 1 and page < total_pages - 1:
-            footer.append(f"[{KEY_NEXT}] Next")
+        footer.extend(_nav_footer_parts(page, total_pages))
         footer.extend([f"[{KEY_BACK}] Back", f"[{KEY_QUIT}] Quit"])
         print_fn("  " + "   ".join(footer))
 

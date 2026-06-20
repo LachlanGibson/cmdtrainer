@@ -248,6 +248,64 @@ def test_module_completion_after_resume_with_reset_streak() -> None:
     assert service.complete_module_if_mastered(profile.id, module) is True
 
 
+def test_queue_does_not_query_schedules_per_card(monkeypatch: Any) -> None:
+    """The practice queue loads all schedules in one bulk query, not per card.
+
+    Guards the efficiency fix: a deep deck shouldn't issue one get_card_schedule
+    round-trip per card on every queue build.
+    """
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-bulk")
+    service.force_unlock_module_with_dependencies(profile.id, "base-linux")
+
+    calls = {"n": 0}
+    original = service.progress.get_card_schedule
+
+    def spy(*args: object, **kwargs: object) -> object:
+        calls["n"] += 1
+        return original(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(service.progress, "get_card_schedule", spy)
+
+    service.due_cards(profile.id, limit=10)
+    service.count_due_cards(profile.id)
+    service.practice_queue(profile.id, limit=30)
+
+    assert calls["n"] == 0
+
+
+def test_card_schedules_bulk_matches_individual() -> None:
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-schedules")
+    module = service.begin_module(profile.id, "base-linux")
+    cards = [card for lesson in module.lessons for card in lesson.cards][:3]
+    for card in cards:
+        service.record_answer(profile.id, card, card.answers[0])
+
+    bulk = service.progress.card_schedules(profile.id)
+    assert set(bulk) == {card.id for card in cards}
+    for card in cards:
+        assert bulk[card.id] == service.progress.get_card_schedule(profile.id, card.id)
+
+
+def test_complete_module_reports_first_completion_only_once() -> None:
+    """complete_module_if_mastered returns True only on the first completion.
+
+    Re-running an already-completed module (or resuming one whose cards are all
+    mastered) must not report a fresh completion, so the UI doesn't claim
+    "completed for the first time" every time.
+    """
+    service = LearnService(":memory:")
+    profile = service.create_profile("p-first-complete")
+    module = service.begin_module(profile.id, "base-linux")
+    for lesson in module.lessons:
+        for card in lesson.cards:
+            service.record_answer(profile.id, card, card.answers[0])
+
+    assert service.complete_module_if_mastered(profile.id, module) is True
+    assert service.complete_module_if_mastered(profile.id, module) is False
+
+
 def test_count_due_cards() -> None:
     service = LearnService(":memory:")
     profile = service.create_profile("p2d")

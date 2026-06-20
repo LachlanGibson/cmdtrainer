@@ -335,6 +335,32 @@ class ProgressStore:
             seen_count=int(row["seen_count"]),
         )
 
+    def card_schedules(self, profile_id: int) -> dict[str, CardSchedule]:
+        """Return all card schedules for a profile keyed by card id (one query).
+
+        Lets the practice queue load every schedule at once instead of issuing a
+        separate query per card.
+        """
+        rows = self._conn.execute(
+            """
+            SELECT card_id, streak, spacing_score, interval_minutes, due_at, seen_count
+            FROM card_progress
+            WHERE profile_id = ?
+            """,
+            (profile_id,),
+        ).fetchall()
+        return {
+            str(row["card_id"]): CardSchedule(
+                card_id=str(row["card_id"]),
+                streak=int(row["streak"]),
+                spacing_score=float(row["spacing_score"]),
+                interval_minutes=int(row["interval_minutes"]),
+                due_at=str(row["due_at"]),
+                seen_count=int(row["seen_count"]),
+            )
+            for row in rows
+        }
+
     def list_module_progress_rows(self, profile_id: int) -> list[dict[str, object]]:
         """Return raw module_progress rows for export."""
         rows = self._conn.execute(
