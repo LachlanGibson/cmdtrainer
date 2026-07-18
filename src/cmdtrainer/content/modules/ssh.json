@@ -176,7 +176,7 @@
         },
         {
           "id": "ssh-no-remote-command",
-          "prompt": "Using SSH, open only a local forward tunnel to db.example.com without running remote command.",
+          "prompt": "Using SSH, forward local port 5432 to remote localhost:5432 on db.example.com as ubuntu without running a remote command.",
           "answers": [
             "ssh -N -L 5432:localhost:5432 ubuntu@db.example.com"
           ],
@@ -214,5 +214,5 @@
       ]
     }
   ],
-  "content_version": 2
+  "content_version": 3
 }

@@ -130,7 +130,7 @@
         },
         {
           "id": "node-release-git-push-follow-tags",
-          "prompt": "Using git, push current branch and reachable annotated tags.",
+          "prompt": "Using git, push the current branch to origin along with reachable annotated tags.",
           "answers": [
             "git push --follow-tags origin HEAD",
             "git push origin HEAD --follow-tags"
@@ -194,5 +194,5 @@
       ]
     }
   ],
-  "content_version": 1
+  "content_version": 2
 }

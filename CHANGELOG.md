@@ -6,6 +6,12 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-07-18
+
+### Fixed
+
+- Clarified two prompts that omitted required details: the SSH tunnel-only card now states the ports and user, and the node-release git push card now names the `origin` remote, so the expected command can actually be written from the prompt.
+
 ## [1.6.1] - 2026-06-20
 
 ### Fixed
